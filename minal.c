@@ -833,8 +833,8 @@ const char* SDLK_to_ansicode(SDL_Keycode key)
         case SDLK_INSERT:    return "\x1B[2~";
         case SDLK_DELETE:    return "\x1B[3~";
         case SDLK_END:       return "\x1B[4~";
-        case SDLK_PAGEUP:    return "\x1B[5~";
-        case SDLK_PAGEDOWN:  return "\x1B[6~";
+        case SDLK_PAGEUP:    return "\x1B[S";
+        case SDLK_PAGEDOWN:  return "\x1B[T";
         case SDLK_F1:        return "\x1B[OP";
         case SDLK_F2:        return "\x1B[OQ";
         case SDLK_F3:        return "\x1B[OR";
