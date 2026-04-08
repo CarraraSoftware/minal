@@ -1,0 +1,862 @@
+From https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+ Definitions
+     C  A single (required) character.
+     Ps  A single (usually optional) numeric parameter, composed of one or more digits.
+     Pm  Any number of single numeric parameters, separated by ; character(s).
+     Pt  A text parameter composed of printable characters.
+     Control Bytes, Characters, and Sequences
+     C1 (8-Bit) Control Characters
+          ESC D  Index (ID is 0x84).
+          ESC E  Next Line (NL is 0x85).
+          ESC H  Tab Set (HT is 0x88).
+          ESC M  Reverse Index (RI is 0x8d).
+          ESC N  Single Shift Select of G2 Character Set (SS2 is 0x8e), VT220.
+          ESC O  Single Shift Select of G3 Character Set (SS3 is 0x8f), VT220.
+          ESC P  Device Control String (DCS is 0x90).
+          ESC V  Start of Guarded Area (SPA is 0x96).
+          ESC W  End of Guarded Area (EPA is 0x97).
+          ESC X  Start of String (SOS is 0x98).
+          ESC Z  Return Terminal ID (DECID is 0x9a).
+          ESC [  Control Sequence Introducer (CSI is 0x9b).
+          ESC \  String Terminator (ST is 0x9c).
+          ESC ]  Operating System Command (OSC is 0x9d).
+          ESC ^  Privacy Message (PM is 0x9e).
+          ESC _  Application Program Command (APC is 0x9f).
+     VT100-related terminals
+ VT100 Mode
+     Single-character functions
+          BEL  Bell (BEL is Ctrl-G).
+          BS  Backspace (BS is Ctrl-H).
+          CR  Carriage Return (CR is Ctrl-M).
+          ENQ  Return Terminal Status (ENQ is Ctrl-E).
+          FF  Form Feed or New Page (NP).
+          LF  Line Feed or New Line (NL).
+          SI  Switch to Standard Character Set (Ctrl-O is Shift In or LS0).
+          SO  Switch to Alternate Character Set (Ctrl-N is Shift Out or LS1).
+          SP  Space.
+          TAB  Horizontal Tab (HT is Ctrl-I).
+          VT  Vertical Tab (VT is Ctrl-K).
+     Controls beginning with ESC
+          ESC SP F  7-bit controls (S7C1T), VT220.
+          ESC SP G  8-bit controls (S8C1T), VT220.
+          ESC SP L  Set ANSI conformance level 1, ECMA-43.
+          ESC SP M  Set ANSI conformance level 2, ECMA-43.
+          ESC SP N  Set ANSI conformance level 3, ECMA-43.
+          ESC # 3  DEC double-height line, top half (DECDHL), VT100.
+          ESC # 4  DEC double-height line, bottom half (DECDHL), VT100.
+          ESC # 5  DEC single-width line (DECSWL), VT100.
+          ESC # 6  DEC double-width line (DECDWL), VT100.
+          ESC # 8  DEC Screen Alignment Test (DECALN), VT100.
+          ESC % @  Select default character set.
+          ESC % G  Select UTF-8 character set, ISO 2022.
+          ESC ( C  Designate G0 Character Set, VT100, ISO 2022.
+               C = A  United Kingdom (UK), VT100.
+               C = B  United States (USASCII), VT100.
+               C = C or 5  Finnish, VT200.
+               C = H or 7  Swedish, VT200.
+               C = K  German, VT200.
+               C = Q or 9  French Canadian, VT200.
+               C = R or f  French, VT200.
+               C = Y  Italian, VT200.
+               C = Z  Spanish, VT200.
+               C = 4  Dutch, VT200.
+               C = " >  Greek, VT500.
+               C = % 2  Turkish, VT500.
+               C = % 6  Portuguese, VT300.
+               C = % =  Hebrew, VT500.
+               C = =  Swiss, VT200.
+               C = `, E or 6  Norwegian/Danish, VT200.
+               C = 0  DEC Special Character and Line Drawing Set, VT100.
+               C = <  DEC Supplemental, VT200.
+               C = <  User Preferred Selection Set, VT300.
+               C = >  DEC Technical, VT300.
+               C = " 4  DEC Hebrew, VT500.
+               C = " ?  DEC Greek, VT500.
+               C = % 0  DEC Turkish, VT500.
+               C = % 5  DEC Supplemental Graphics, VT300.
+               C = & 4  DEC Cyrillic, VT500.
+               C = I  JIS-Katakana, VT382.
+               C = J  JIS-Roman, VT382.
+               C = % 3  SCS NRCS, VT500.
+               C = & 5  DEC Russian, VT500.
+          ESC ) C  Designate G1 Character Set, ISO 2022, VT100.
+          ESC * C  Designate G2 Character Set, ISO 2022, VT220.
+          ESC + C  Designate G3 Character Set, ISO 2022, VT220.
+          ESC - C  Designate G1 Character Set, VT300.
+               C = A  ISO Latin-1 Supplemental, VT300.
+               C = B  ISO Latin-2 Supplemental, VT500.
+               C = F  ISO Greek Supplemental, VT500.
+               C = H  ISO Hebrew Supplemental, VT500.
+               C = L  ISO Latin-Cyrillic, VT500.
+               C = M  ISO Latin-5 Supplemental, VT500.
+          ESC . C  Designate G2 Character Set, VT300.
+          ESC / C  Designate G3 Character Set, VT300.
+          ESC 6  Back Index (DECBI), VT420 and up.
+          ESC 7  Save Cursor (DECSC), VT100.
+          ESC 8  Restore Cursor (DECRC), VT100.
+          ESC 9  Forward Index (DECFI), VT420 and up.
+          ESC =  Application Keypad (DECKPAM).
+          ESC >  Normal Keypad (DECKPNM), VT100.
+          ESC F  Cursor to lower left corner of screen.
+          ESC c  Full Reset (RIS), VT100.
+          ESC l  Memory Lock (per HP terminals).
+          ESC m  Memory Unlock (per HP terminals).
+          ESC n  Invoke the G2 Character Set as GL (LS2).
+          ESC o  Invoke the G3 Character Set as GL (LS3).
+          ESC |  Invoke the G3 Character Set as GR (LS3R).
+          ESC }  Invoke the G2 Character Set as GR (LS2R).
+          ESC ~  Invoke the G1 Character Set as GR (LS1R), VT100.
+     Application Program-Command functions
+          APC Pt ST  None.
+     Device-Control functions
+          DCS Ps ; Ps | Pt ST  User-Defined Keys (DECUDK), VT220 and up.
+               Ps = 0  Clear all UDK definitions before starting (default).
+               Ps = 1  Erase Below (default).
+          DCS Ps ! u Pt ST  Assigning User-Preferred Supplemental Sets (DECAUPSS), VT320, VT510.
+          DCS $ q Pt ST  Request Status String (DECRQSS), VT420 and up.
+          DCS Ps $ t Pt ST  Restore presentation status (DECRSPS), VT320 and up.
+               Ps = 1  DECCIR
+               Ps = 2  DECTABSR
+          DCS + Q Pt ST  Request resource values (XTGETXRES), xterm.
+          DCS + p Pt ST  Set Termcap/Terminfo Data (XTSETTCAP), xterm.
+          DCS + q Pt ST  Request Termcap/Terminfo String (XTGETTCAP), xterm.
+     Functions using CSI , ordered by the final character(s)
+          CSI Ps @  Insert Ps (Blank) Character(s) (default = 1) (ICH).
+          CSI Ps SP @  Shift left Ps columns(s) (default = 1) (SL), ECMA-48.
+          CSI Ps A  Cursor Up Ps Times (default = 1) (CUU).
+          CSI Ps SP A  Shift right Ps columns(s) (default = 1) (SR), ECMA-48.
+          CSI Ps B  Cursor Down Ps Times (default = 1) (CUD).
+          CSI Ps C  Cursor Forward Ps Times (default = 1) (CUF).
+          CSI Ps D  Cursor Backward Ps Times (default = 1) (CUB).
+          CSI Ps E  Cursor Next Line Ps Times (default = 1) (CNL).
+          CSI Ps F  Cursor Preceding Line Ps Times (default = 1) (CPL).
+          CSI Ps G  Cursor Character Absolute [column] (default = [row,1]) (CHA).
+          CSI Ps ; Ps H  Cursor Position [row;column] (default = [1,1]) (CUP).
+          CSI Ps I  Cursor Forward Tabulation Ps tab stops (default = 1) (CHT).
+          CSI Ps J  Erase in Display (ED), VT100.
+               Ps = 0  Erase Below (default).
+               Ps = 1  Erase Above.
+               Ps = 2  Erase All.
+               Ps = 3  Erase Saved Lines,  xterm.
+          CSI ? Ps J  Erase in Display (DECSED), VT220.
+               Ps = 0  Selective Erase Below (default).
+               Ps = 1  Selective Erase Above.
+               Ps = 2  Selective Erase All.
+               Ps = 3  Selective Erase Saved Lines,  xterm.
+          CSI Ps K  Erase in Line (EL), VT100.
+               Ps = 0  Erase to Right (default).
+               Ps = 1  Erase to Left.
+               Ps = 2  Erase All.
+          CSI ? Ps K  Erase in Line (DECSEL), VT220.
+               Ps = 0  Selective Erase to Right (default).
+               Ps = 1  Selective Erase to Left.
+               Ps = 2  Selective Erase All.
+          CSI Ps L  Insert Ps Line(s) (default = 1) (IL).
+          CSI Ps M  Delete Ps Line(s) (default = 1) (DL).
+          CSI Ps P  Delete Ps Character(s) (default = 1) (DCH).
+          CSI # P  Push current dynamic- and ANSI-palette colors onto stack (XTPUSHCOLORS), xterm.
+          CSI Pm # P  Push current dynamic- and ANSI-palette colors onto stack (XTPUSHCOLORS), xterm.
+          CSI # Q  Pop stack to set dynamic- and ANSI-palette colors (XTPOPCOLORS), xterm.
+          CSI Pm # Q  Pop stack to set dynamic- and ANSI-palette colors (XTPOPCOLORS), xterm.
+          CSI # R  Report the current entry on the palette stack, and the number of palettes stored on the stack, using the same form as XTPOPCOLOR (default = 0) (XTREPORTCOLORS), xterm.
+          CSI Ps S  Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48.
+          CSI # S  Report position on title-stack (XTTITLEPOS), xterm.
+          CSI ? Pi ; Pa ; Pv S  Set or request graphics attribute (XTSMGRAPHICS), xterm.
+               Pi = 1  item is number of color registers.
+               Pi = 2  item is Sixel graphics geometry (in pixels).
+               Pi = 3  item is ReGIS graphics geometry (in pixels).
+               Pa = 1  read attribute.
+               Pa = 2  reset to default.
+               Pa = 3  set to value in Pv.
+               Pa = 4  read the maximum allowed value.
+          CSI Ps T  Scroll down Ps lines (default = 1) (SD), VT420.
+          CSI Ps ; Ps ; Ps ; Ps ; Ps T  Initiate highlight mouse tracking (XTHIMOUSE), xterm.
+          CSI > Pm T  Reset title mode features to default value (XTRMTITLE), xterm.
+               Ps = 0  Do not set window/icon labels using hexadecimal.
+               Ps = 1  Do not query window/icon labels using hexadecimal.
+               Ps = 2  Do not set window/icon labels using UTF-8.
+               Ps = 3  Do not query window/icon labels using UTF-8.
+          CSI ? 5 W  Reset tab stops to start with column 9, every 8 columns (DECST8C), VT510.
+          CSI Ps X  Erase Ps Character(s) (default = 1) (ECH).
+          CSI Ps Z  Cursor Backward Tabulation Ps tab stops (default = 1) (CBT).
+          CSI Ps ^  Scroll down Ps lines (default = 1) (SD), ECMA-48.
+          CSI Ps `  Character Position Absolute [column] (default = [row,1]) (HPA).
+          CSI Ps a  Character Position Relative [columns] (default = [row,col+1]) (HPR).
+          CSI Ps b  Repeat the preceding graphic character Ps times (REP).
+          CSI Ps c  Send Device Attributes (Primary DA).
+               Ps = 0 or omitted  request attributes from terminal.
+               Ps = 1    132-columns.
+               Ps = 2    Printer.
+               Ps = 3    ReGIS graphics.
+               Ps = 4    Sixel graphics.
+               Ps = 6    Selective erase.
+               Ps = 8    User-defined keys.
+               Ps = 9    National Replacement Character sets.
+               Ps = 1 5  Technical characters.
+               Ps = 1 6  Locator port.
+               Ps = 1 7  Terminal state interrogation.
+               Ps = 1 8  User windows.
+               Ps = 2 1  Horizontal scrolling.
+               Ps = 2 2  ANSI color, e.g., VT525.
+               Ps = 2 8  Rectangular editing.
+               Ps = 2 9  ANSI text locator (i.e., DEC Locator mode).
+          CSI = Ps c  Send Device Attributes (Tertiary DA).
+               Ps = 0  report Terminal Unit ID (default), VT400.
+          CSI > Ps c  Send Device Attributes (Secondary DA).
+               Ps = 0 or omitted  request the terminal's identification code.
+               Pp = 0  “VT100”.
+               Pp = 1  “VT220”.
+               Pp = 2  “VT240” or “VT241”.
+               Pp = 1 8  “VT330”.
+               Pp = 1 9  “VT340”.
+               Pp = 2 4  “VT320”.
+               Pp = 3 2  “VT382”.
+               Pp = 4 1  “VT420”.
+               Pp = 6 1  “VT510”.
+               Pp = 6 4  “VT520”.
+               Pp = 6 5  “VT525”.
+          CSI Ps d  Line Position Absolute [row] (default = [1,column]) (VPA).
+          CSI Ps e  Line Position Relative [rows] (default = [row+1,column]) (VPR).
+          CSI Ps ; Ps f  Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP).
+          CSI > Pp ; Pv f  Set/reset key format options (XTFMTKEYS), xterm.
+          CSI > Pp f  Set/reset key format options (XTFMTKEYS), xterm.
+               Pp = 0  formatKeyboard.
+               Pp = 1  formatCursorKeys.
+               Pp = 2  formatFunctionKeys.
+               Pp = 3  formatKeypadKeys.
+               Pp = 4  formatOtherKeys.
+               Pp = 6  formatModifierKeys.
+               Pp = 7  formatSpecialKeys.
+          CSI Ps g  Tab Clear (TBC).
+               Ps = 0  Clear Current Column (default).
+               Ps = 3  Clear All.
+          CSI ? Pp g  Query key modifier options (XTQFMTKEYS), xterm.
+               Pp = 0  formatKeyboard.
+               Pp = 1  formatCursorKeys.
+               Pp = 2  formatFunctionKeys.
+               Pp = 3  formatKeypadKeys.
+               Pp = 4  formatOtherKeys.
+               Pp = 6  formatModifierKeys.
+               Pp = 7  formatSpecialKeys.
+               Pp = 0  formatKeyboard.
+               Pp = 1  formatCursorKeys.
+               Pp = 2  formatFunctionKeys.
+               Pp = 3  formatKeypadKeys.
+               Pp = 4  formatOtherKeys.
+               Pp = 6  formatModifierKeys.
+               Pp = 7  formatSpecialKeys.
+          CSI Pm h  Set Mode (SM).
+               Ps = 2  Keyboard Action Mode (KAM).
+               Ps = 4  Insert Mode (IRM).
+               Ps = 1 2  Send/receive (SRM).
+               Ps = 2 0  Automatic Newline (LNM).
+          CSI ? Pm h  DEC Private Mode Set (DECSET).
+               Ps = 1  Application Cursor Keys (DECCKM), VT100.
+               Ps = 2  Designate USASCII for character sets G0-G3 (DECANM), VT100, and set VT100 mode.
+               Ps = 3  132 Column Mode (DECCOLM), VT100.
+               Ps = 4  Smooth (Slow) Scroll (DECSCLM), VT100.
+               Ps = 5  Reverse Video (DECSCNM), VT100.
+               Ps = 6  Origin Mode (DECOM), VT100.
+               Ps = 7  Auto-Wrap Mode (DECAWM), VT100.
+               Ps = 8  Auto-Repeat Keys (DECARM), VT100.
+               Ps = 9  Send Mouse X  amp Y on button press.
+               Ps = 1 0  Show toolbar (rxvt).
+               Ps = 1 2  Start blinking cursor (AT ampT 610).
+               Ps = 1 3  Start blinking cursor (set only via resource or menu).
+               Ps = 1 4  Enable XOR of blinking cursor control sequence and menu.
+               Ps = 1 8  Print Form Feed (DECPFF), VT220.
+               Ps = 1 9  Set print extent to full screen (DECPEX), VT220.
+               Ps = 2 5  Show cursor (DECTCEM), VT220.
+               Ps = 3 0  Show scrollbar (rxvt).
+               Ps = 3 5  Enable font-shifting functions (rxvt).
+               Ps = 3 8  Enter Tektronix mode (DECTEK), VT240,  xterm.
+               Ps = 4 0  132 mode,  xterm.
+               Ps = 4 1  more(1) fix (see curses resource).
+               Ps = 4 2  Enable National Replacement Character sets (DECNRCM), VT220.
+               Ps = 4 3  Enable Graphic Expanded Print Mode (DECGEPM), VT340.
+               Ps = 4 4  Turn on margin bell,  xterm.
+               Ps = 4 4  Enable Graphic Print Color Mode (DECGPCM), VT340.
+               Ps = 4 5  Reverse-wraparound mode (XTREVWRAP),  xterm.
+               Ps = 4 5  Enable Graphic Print Color Syntax (DECGPCS), VT340.
+               Ps = 4 6  Start logging (XTLOGGING),  xterm.
+               Ps = 4 6  Graphic Print Background Mode, VT340.
+               Ps = 4 7  Use Alternate Screen Buffer,  xterm.
+               Ps = 4 7  Enable Graphic Rotated Print Mode (DECGRPM), VT340.
+               Ps = 6 6  Application keypad mode (DECNKM), VT320.
+               Ps = 6 7  Backarrow key sends backspace (DECBKM), VT340, VT420.
+               Ps = 6 9  Enable left and right margin mode (DECLRMM), VT420 and up.
+               Ps = 8 0  Enable Sixel Display Mode (DECSDM), VT330, VT340, VT382.
+               Ps = 9 5  Do not clear screen when DECCOLM is set/reset (DECNCSM), VT510 and up.
+               Ps = 1 0 0 0  Send Mouse X  amp Y on button press and release.
+               Ps = 1 0 0 1  Use Hilite Mouse Tracking,  xterm.
+               Ps = 1 0 0 2  Use Cell Motion Mouse Tracking,  xterm.
+               Ps = 1 0 0 3  Use All Motion Mouse Tracking,  xterm.
+               Ps = 1 0 0 4  Send FocusIn/FocusOut events,  xterm.
+               Ps = 1 0 0 5  Enable UTF-8 Mouse Mode,  xterm.
+               Ps = 1 0 0 6  Enable SGR Mouse Mode,  xterm.
+               Ps = 1 0 0 7  Enable Alternate Scroll Mode,  xterm.
+               Ps = 1 0 1 0  Scroll to bottom on tty output (rxvt).
+               Ps = 1 0 1 1  Scroll to bottom on key press (rxvt).
+               Ps = 1 0 1 4  Enable \fB\%fastScroll\fP resource,  xterm.
+               Ps = 1 0 1 5  Enable urxvt Mouse Mode.
+               Ps = 1 0 1 6  Enable SGR Mouse PixelMode,  xterm.
+               Ps = 1 0 3 4  Interpret “meta” key,  xterm.
+               Ps = 1 0 3 5  Enable special modifiers for Alt and NumLock keys,  xterm.
+               Ps = 1 0 3 6  Send ESC when Meta modifies a key,  xterm.
+               Ps = 1 0 3 7  Send DEL from the editing-keypad Delete key,  xterm.
+               Ps = 1 0 3 9  Send ESC when Alt modifies a key,  xterm.
+               Ps = 1 0 4 0  Keep selection even if not highlighted,  xterm.
+               Ps = 1 0 4 1  Use the CLIPBOARD selection,  xterm.
+               Ps = 1 0 4 2  Enable Urgency window manager hint when Control-G is received,  xterm.
+               Ps = 1 0 4 3  Enable raising of the window when Control-G is received,  xterm.
+               Ps = 1 0 4 4  Reuse the most recent data copied to CLIPBOARD,  xterm.
+               Ps = 1 0 4 5  Extended Reverse-wraparound mode (XTREVWRAP2),  xterm.
+               Ps = 1 0 4 6  Enable switching to/from Alternate Screen Buffer,  xterm.
+               Ps = 1 0 4 7  Use Alternate Screen Buffer,  xterm.
+               Ps = 1 0 4 8  Save cursor as in DECSC,  xterm.
+               Ps = 1 0 4 9  Save cursor as in DECSC,  xterm.
+               Ps = 1 0 5 0  Set terminfo/termcap function-key mode,  xterm.
+               Ps = 1 0 5 1  Set Sun function-key mode,  xterm.
+               Ps = 1 0 5 2  Set HP function-key mode,  xterm.
+               Ps = 1 0 5 3  Set SCO function-key mode,  xterm.
+               Ps = 1 0 6 0  Set legacy keyboard emulation, i.e, X11R6,  xterm.
+               Ps = 1 0 6 1  Set VT220 keyboard emulation,  xterm.
+               Ps = 2 0 0 1  Enable readline mouse button-1,  xterm.
+               Ps = 2 0 0 2  Enable readline mouse button-2,  xterm.
+               Ps = 2 0 0 3  Enable readline mouse button-3,  xterm.
+               Ps = 2 0 0 4  Set bracketed paste mode,  xterm.
+               Ps = 2 0 0 5  Enable readline character-quoting,  xterm.
+               Ps = 2 0 0 6  Enable readline newline pasting,  xterm.
+          CSI Ps i  Media Copy (MC).
+               Ps = 0  Print screen (default).
+               Ps = 4  Turn off printer controller mode.
+               Ps = 5  Turn on printer controller mode.
+               Ps = 1 0  HTML screen dump,  xterm.
+               Ps = 1 1  SVG screen dump,  xterm.
+          CSI ? Ps i  Media Copy (MC), DEC-specific.
+               Ps = 1  Print line containing cursor.
+               Ps = 4  Turn off autoprint mode.
+               Ps = 5  Turn on autoprint mode.
+               Ps = 1 0  Print composed display, ignores DECPEX.
+               Ps = 1 1  Print all pages.
+          CSI Pm l  Reset Mode (RM).
+               Ps = 2  Keyboard Action Mode (KAM).
+               Ps = 4  Replace Mode (IRM).
+               Ps = 1 2  Send/receive (SRM).
+               Ps = 2 0  Normal Linefeed (LNM).
+          CSI ? Pm l  DEC Private Mode Reset (DECRST).
+               Ps = 1  Normal Cursor Keys (DECCKM), VT100.
+               Ps = 2  Designate VT52 mode (DECANM), VT100.
+               Ps = 3  80 Column Mode (DECCOLM), VT100.
+               Ps = 4  Jump (Fast) Scroll (DECSCLM), VT100.
+               Ps = 5  Normal Video (DECSCNM), VT100.
+               Ps = 6  Normal Cursor Mode (DECOM), VT100.
+               Ps = 7  No Auto-Wrap Mode (DECAWM), VT100.
+               Ps = 8  No Auto-Repeat Keys (DECARM), VT100.
+               Ps = 9  Don't send Mouse X  amp Y on button press,  xterm.
+               Ps = 1 0  Hide toolbar (rxvt).
+               Ps = 1 2  Stop blinking cursor (AT ampT 610).
+               Ps = 1 3  Disable blinking cursor (reset only via resource or menu).
+               Ps = 1 4  Disable XOR of blinking cursor control sequence and menu.
+               Ps = 1 8  Don't Print Form Feed (DECPFF), VT220.
+               Ps = 1 9  Limit print to scrolling region (DECPEX), VT220.
+               Ps = 2 5  Hide cursor (DECTCEM), VT220.
+               Ps = 3 0  Don't show scrollbar (rxvt).
+               Ps = 3 5  Disable font-shifting functions (rxvt).
+               Ps = 4 0  132 mode,  xterm.
+               Ps = 4 1  No more(1) fix (see curses resource).
+               Ps = 4 2  Disable National Replacement Character sets (DECNRCM), VT220.
+               Ps = 4 3  Disable Graphic Expanded Print Mode (DECGEPM), VT340.
+               Ps = 4 4  Turn off margin bell,  xterm.
+               Ps = 4 4  Disable Graphic Print Color Mode (DECGPCM), VT340.
+               Ps = 4 5  No Reverse-wraparound mode (XTREVWRAP),  xterm.
+               Ps = 4 5  Disable Graphic Print Color Syntax (DECGPCS), VT340.
+               Ps = 4 6  Stop logging (XTLOGGING),  xterm.
+               Ps = 4 7  Use Normal Screen Buffer,  xterm.
+               Ps = 4 7  Disable Graphic Rotated Print Mode (DECGRPM), VT340.
+               Ps = 6 6  Numeric keypad mode (DECNKM), VT320.
+               Ps = 6 7  Backarrow key sends delete (DECBKM), VT340, VT420.
+               Ps = 6 9  Disable left and right margin mode (DECLRMM), VT420 and up.
+               Ps = 8 0  Disable Sixel Display Mode (DECSDM), VT330, VT340, VT382.
+               Ps = 9 5  Clear screen when DECCOLM is set/reset (DECNCSM), VT510 and up.
+               Ps = 1 0 0 0  Don't send Mouse X  amp Y on button press and release.
+               Ps = 1 0 0 1  Don't use Hilite Mouse Tracking,  xterm.
+               Ps = 1 0 0 2  Don't use Cell Motion Mouse Tracking,  xterm.
+               Ps = 1 0 0 3  Don't use All Motion Mouse Tracking,  xterm.
+               Ps = 1 0 0 4  Don't send FocusIn/FocusOut events,  xterm.
+               Ps = 1 0 0 5  Disable UTF-8 Mouse Mode,  xterm.
+               Ps = 1 0 0 6  Disable SGR Mouse Mode,  xterm.
+               Ps = 1 0 0 7  Disable Alternate Scroll Mode,  xterm.
+               Ps = 1 0 1 0  Don't scroll to bottom on tty output (rxvt).
+               Ps = 1 0 1 1  Don't scroll to bottom on key press (rxvt).
+               Ps = 1 0 1 4  Disable \fB\%fastScroll\fP resource,  xterm.
+               Ps = 1 0 1 5  Disable urxvt Mouse Mode.
+               Ps = 1 0 1 6  Disable SGR Mouse Pixel-Mode,  xterm.
+               Ps = 1 0 3 4  Don't interpret “meta” key,  xterm.
+               Ps = 1 0 3 5  Disable special modifiers for Alt and NumLock keys,  xterm.
+               Ps = 1 0 3 6  Don't send ESC when Meta modifies a key,  xterm.
+               Ps = 1 0 3 7  Send VT220 Remove from the editing-keypad Delete key,  xterm.
+               Ps = 1 0 3 9  Don't send ESC when Alt modifies a key,  xterm.
+               Ps = 1 0 4 0  Do not keep selection when not highlighted,  xterm.
+               Ps = 1 0 4 1  Use the PRIMARY selection,  xterm.
+               Ps = 1 0 4 2  Disable Urgency window manager hint when Control-G is received,  xterm.
+               Ps = 1 0 4 3  Disable raising of the window when Control-G is received,  xterm.
+               Ps = 1 0 4 5  No Extended Reverse-wraparound mode (XTREVWRAP2),  xterm.
+               Ps = 1 0 4 6  Disable switching to/from Alternate Screen Buffer,  xterm.
+               Ps = 1 0 4 7  Use Normal Screen Buffer,  xterm.
+               Ps = 1 0 4 8  Restore cursor as in DECRC,  xterm.
+               Ps = 1 0 4 9  Use Normal Screen Buffer and restore cursor as in DECRC,  xterm.
+               Ps = 1 0 5 0  Reset terminfo/termcap function-key mode,  xterm.
+               Ps = 1 0 5 1  Reset Sun function-key mode,  xterm.
+               Ps = 1 0 5 2  Reset HP function-key mode,  xterm.
+               Ps = 1 0 5 3  Reset SCO function-key mode,  xterm.
+               Ps = 1 0 6 0  Reset legacy keyboard emulation, i.e, X11R6,  xterm.
+               Ps = 1 0 6 1  Reset keyboard emulation to Sun/PC style,  xterm.
+               Ps = 2 0 0 1  Disable readline mouse button-1,  xterm.
+               Ps = 2 0 0 2  Disable readline mouse button-2,  xterm.
+               Ps = 2 0 0 3  Disable readline mouse button-3,  xterm.
+               Ps = 2 0 0 4  Reset bracketed paste mode,  xterm.
+               Ps = 2 0 0 5  Disable readline character-quoting,  xterm.
+               Ps = 2 0 0 6  Disable readline newline pasting,  xterm.
+          CSI Pm m  Character Attributes (SGR).
+               Ps = 0  Normal (default), VT100.
+               Ps = 1  Bold, VT100.
+               Ps = 2  Faint, decreased intensity, ECMA-48 2nd.
+               Ps = 3  Italicized, ECMA-48 2nd.
+               Ps = 4  Underlined, VT100.
+               Ps = 5  Blink, VT100.
+               Ps = 7  Inverse, VT100.
+               Ps = 8  Invisible, i.e., hidden, ECMA-48 2nd, VT300.
+               Ps = 9  Crossed-out characters, ECMA-48 3rd.
+               Ps = 2 1  Doubly-underlined, ECMA-48 3rd.
+               Ps = 2 2  Normal (neither bold nor faint), ECMA-48 3rd.
+               Ps = 2 3  Not italicized, ECMA-48 3rd.
+               Ps = 2 4  Not underlined, ECMA-48 3rd.
+               Ps = 2 5  Steady (not blinking), ECMA-48 3rd.
+               Ps = 2 7  Positive (not inverse), ECMA-48 3rd.
+               Ps = 2 8  Visible, i.e., not hidden, ECMA-48 3rd, VT300.
+               Ps = 2 9  Not crossed-out, ECMA-48 3rd.
+               Ps = 3 0  Set foreground color to Black.
+               Ps = 3 1  Set foreground color to Red.
+               Ps = 3 2  Set foreground color to Green.
+               Ps = 3 3  Set foreground color to Yellow.
+               Ps = 3 4  Set foreground color to Blue.
+               Ps = 3 5  Set foreground color to Magenta.
+               Ps = 3 6  Set foreground color to Cyan.
+               Ps = 3 7  Set foreground color to White.
+               Ps = 3 9  Set foreground color to default, ECMA-48 3rd.
+               Ps = 4 0  Set background color to Black.
+               Ps = 4 1  Set background color to Red.
+               Ps = 4 2  Set background color to Green.
+               Ps = 4 3  Set background color to Yellow.
+               Ps = 4 4  Set background color to Blue.
+               Ps = 4 5  Set background color to Magenta.
+               Ps = 4 6  Set background color to Cyan.
+               Ps = 4 7  Set background color to White.
+               Ps = 4 9  Set background color to default, ECMA-48 3rd.
+               Ps = 9 0  Set foreground color to Black.
+               Ps = 9 1  Set foreground color to Red.
+               Ps = 9 2  Set foreground color to Green.
+               Ps = 9 3  Set foreground color to Yellow.
+               Ps = 9 4  Set foreground color to Blue.
+               Ps = 9 5  Set foreground color to Magenta.
+               Ps = 9 6  Set foreground color to Cyan.
+               Ps = 9 7  Set foreground color to White.
+               Ps = 1 0 0  Set background color to Black.
+               Ps = 1 0 1  Set background color to Red.
+               Ps = 1 0 2  Set background color to Green.
+               Ps = 1 0 3  Set background color to Yellow.
+               Ps = 1 0 4  Set background color to Blue.
+               Ps = 1 0 5  Set background color to Magenta.
+               Ps = 1 0 6  Set background color to Cyan.
+               Ps = 1 0 7  Set background color to White.
+               Ps = 1 0 0  Set foreground and background color to default.
+               Ps = 3 8 : 2 : Pi : Pr : Pg : Pb  Set foreground color using RGB values.
+               Ps = 3 8 : 5 : Ps  Set foreground color to Ps, using indexed color.
+               Ps = 4 8 : 2 : Pi : Pr : Pg : Pb  Set background color using RGB values.
+               Ps = 4 8 : 5 : Ps  Set background color to Ps, using indexed color.
+               Ps = 3 8 ; 2 ; Pr ; Pg ; Pb  Set foreground color using RGB values.
+               Ps = 4 8 ; 2 ; Pr ; Pg ; Pb  Set background color using RGB values.
+          CSI > Pp ; Pv m  Set/reset key modifier options (XTMODKEYS), xterm.
+          CSI > Pp m  Set/reset key modifier options (XTMODKEYS), xterm.
+               Pp = 0  modifyKeyboard.
+               Pp = 1  modifyCursorKeys.
+               Pp = 2  modifyFunctionKeys.
+               Pp = 3  modifyKeypadKeys.
+               Pp = 4  modifyOtherKeys.
+               Pp = 6  modifyModifierKeys.
+               Pp = 7  modifySpecialKeys.
+          CSI ? Pp m  Query key modifier options (XTQMODKEYS), xterm.
+               Pp = 0  modifyKeyboard.
+               Pp = 1  modifyCursorKeys.
+               Pp = 2  modifyFunctionKeys.
+               Pp = 3  modifyKeypadKeys.
+               Pp = 4  modifyOtherKeys.
+               Pp = 6  modifyModifierKeys.
+               Pp = 7  modifySpecialKeys.
+               Pp = 0  modifyKeyboard.
+               Pp = 1  modifyCursorKeys.
+               Pp = 2  modifyFunctionKeys.
+               Pp = 3  modifyKeypadKeys.
+               Pp = 4  modifyOtherKeys.
+               Pp = 6  modifyModifierKeys.
+               Pp = 7  modifySpecialKeys.
+          CSI Ps n  Device Status Report (DSR).
+               Ps = 5  Status Report.
+               Ps = 6  Report Cursor Position (CPR) [row;column].
+          CSI > Ps n  Disable key modifier options, xterm.
+               Ps = 0  modifyKeyboard.
+               Ps = 1  modifyCursorKeys.
+               Ps = 2  modifyFunctionKeys.
+               Ps = 3  modifyKeypadKeys.
+               Ps = 4  modifyOtherKeys.
+               Ps = 6  modifyModifierKeys.
+               Ps = 7  modifySpecialKeys.
+          CSI ? Ps n  Device Status Report (DSR, DEC-specific).
+               Ps = 6  Report Cursor Position (DECXCPR).
+               Ps = 1 5  Report Printer status.
+               Ps = 2 5  Report UDK status.
+               Ps = 2 6  Report Keyboard status.
+               Ps = 5 5  Report Locator status.
+               Ps = 5 6  Report Locator type.
+               Ps = 6 2  Report macro space (DECMSR).
+               Ps = 6 3  Report memory checksum (DECCKSR), VT420 and up.
+               Ps = 7 5  Report data integrity.
+               Ps = 8 5  Report multi-session configuration.
+          CSI > Ps p  Set resource value \fB\%pointerMode\fP (XTSMPOINTER), xterm.
+               Ps = 0  never hide the pointer.
+               Ps = 1  hide if the mouse tracking mode is not enabled.
+               Ps = 2  always hide the pointer, except when leaving the window.
+               Ps = 3  always hide the pointer, even if leaving/entering the window.
+          CSI ! p  Soft terminal reset (DECSTR), VT220 and up.
+          CSI Pl ; Pc " p  Set conformance level (DECSCL), VT220 and up.
+               Pl = 6 1  level 1, e.g., VT100.
+               Pl = 6 2  level 2, e.g., VT200.
+               Pl = 6 3  level 3, e.g., VT300.
+               Pl = 6 4  level 4, e.g., VT400.
+               Pl = 6 5  level 5, e.g., VT500.
+               Pc = 0  8-bit controls.
+               Pc = 1  7-bit controls (DEC factory default).
+               Pc = 2  8-bit controls.
+          CSI Ps $ p  Request ANSI mode (DECRQM).
+          CSI ? Ps $ p  Request DEC private mode (DECRQM).
+          CSI # p  Push video attributes onto stack (XTPUSHSGR), xterm.
+          CSI Pm # p  Push video attributes onto stack (XTPUSHSGR), xterm.
+          CSI > Ps q
+               Ps = 0  Report  xterm name and version (XTVERSION).
+          CSI Ps q  Load LEDs (DECLL), VT100.
+               Ps = 0  Clear all LEDS (default).
+               Ps = 1  Light Num Lock.
+               Ps = 2  Light Caps Lock.
+               Ps = 3  Light Scroll Lock.
+               Ps = 2 1  Extinguish Num Lock.
+               Ps = 2 2  Extinguish Caps Lock.
+               Ps = 2 3  Extinguish Scroll Lock.
+          CSI Ps SP q  Set cursor style (DECSCUSR), VT520.
+               Ps = 0  blinking block.
+               Ps = 1  blinking block (default).
+               Ps = 2  steady block.
+               Ps = 3  blinking underline.
+               Ps = 4  steady underline.
+               Ps = 5  blinking bar,  xterm.
+               Ps = 6  steady bar,  xterm.
+          CSI Ps " q  Select character protection attribute (DECSCA), VT220.
+               Ps = 0  DECSED and DECSEL can erase (default).
+               Ps = 1  DECSED and DECSEL cannot erase.
+               Ps = 2  DECSED and DECSEL can erase.
+          CSI # q  Pop video attributes from stack (XTPOPSGR), xterm.
+          CSI Ps ; Ps r  Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM), VT100.
+          CSI ? Pm r  Restore DEC Private Mode Values (XTRESTORE), xterm.
+          CSI Pt ; Pl ; Pb ; Pr ; Pm $ r  Change Attributes in Rectangular Area (DECCARA), VT400 and up.
+          CSI s  Save cursor, available only when DECLRMM is disabled (SCOSC, also ANSI.SYS).
+          CSI Pl ; Pr s  Set left and right margins (DECSLRM), VT420 and up.
+          CSI > Ps s  Set/reset shift-escape options (XTSHIFTESCAPE), xterm.
+               Ps = 0  allow shift-key to override mouse protocol.
+               Ps = 1  conditionally allow shift-key as modifier in mouse protocol.
+               Ps = 2  always allow shift-key as modifier in mouse protocol.
+               Ps = 3  never allow shift-key as modifier in mouse protocol.
+          CSI ? Pm s  Save DEC Private Mode Values (XTSAVE), xterm.
+          CSI Ps ; Ps ; Ps t  Window manipulation (XTWINOPS), dtterm, extended by xterm.
+               Ps = 1  De-iconify window.
+               Ps = 2  Iconify window.
+               Ps = 3 ; x ; y  Move window to [x, y].
+               Ps = 4 ; height ; width  Resize the  xterm window to given height and width in pixels.
+               Ps = 5  Raise the  xterm window to the front of the stacking order.
+               Ps = 6  Lower the  xterm window to the bottom of the stacking order.
+               Ps = 7  Refresh the  xterm window.
+               Ps = 8 ; height ; width  Resize the text area to given height and width in characters.
+               Ps = 9 ; 0  Restore maximized window.
+               Ps = 9 ; 1  Maximize window (i.e., resize to screen size).
+               Ps = 9 ; 2  Maximize window vertically.
+               Ps = 9 ; 3  Maximize window horizontally.
+               Ps = 1 0 ; 0  Undo full-screen mode.
+               Ps = 1 0 ; 1  Change to full-screen.
+               Ps = 1 0 ; 2  Toggle full-screen.
+               Ps = 1 1  Report  xterm window state.
+               Ps = 1 3  Report  xterm window position.
+               Ps = 1 3 ; 2  Report  xterm text-area position.
+               Ps = 1 4  Report  xterm text area size in pixels.
+               Ps = 1 4 ; 2  Report  xterm window size in pixels.
+               Ps = 1 5  Report size of the screen in pixels.
+               Ps = 1 6  Report  xterm character cell size in pixels.
+               Ps = 1 8  Report the size of the text area in characters.
+               Ps = 1 9  Report the size of the screen in characters.
+               Ps = 2 0  Report  xterm window's icon label.
+               Ps = 2 1  Report  xterm window's title.
+               Ps = 2 2 ; 0  Save  xterm icon and window title on stack.
+               Ps = 2 2 ; 1  Save  xterm icon title on stack.
+               Ps = 2 2 ; 2  Save  xterm window title on stack.
+               Ps = 2 3 ; 0  Restore  xterm icon and window title from stack.
+               Ps = 2 3 ; 1  Restore  xterm icon title from stack.
+               Ps = 2 3 ; 2  Restore  xterm window title from stack.
+               Ps >= 2 4  Resize to Ps lines (DECSLPP), VT340 and VT420.
+          CSI > Pm t  This xterm control sets one or more features of the title modes (XTSMTITLE), xterm.
+               Ps = 0  Set window/icon labels using hexadecimal.
+               Ps = 1  Query window/icon labels using hexadecimal.
+               Ps = 2  Set window/icon labels using UTF-8.
+               Ps = 3  Query window/icon labels using UTF-8.
+          CSI Ps SP t  Set warning-bell volume (DECSWBV), VT520.
+               Ps = 0 or 1  off.
+               Ps = 2, 3 or 4  low.
+               Ps = 5, 6, 7, or 8  high.
+          CSI Pt ; Pl ; Pb ; Pr ; Pm $ t  Reverse Attributes in Rectangular Area (DECRARA), VT400 and up.
+          CSI u  Restore cursor (SCORC, also ANSI.SYS).
+          CSI&; u  User-Preferred Supplemental Set (DECRQUPSS), VT320, VT510.
+          CSI Ps SP u  Set margin-bell volume (DECSMBV), VT520.
+               Ps = 0, 5, 6, 7, or 8  high.
+               Ps = 1  off.
+               Ps = 2, 3 or 4  low.
+          CSI " v  Request Displayed Extent (DECRQDE), VT340, VT420.
+          CSI Pt ; Pl ; Pb ; Pr ; Pp ; Pt ; Pl ; Pp $ v  Copy Rectangular Area (DECCRA), VT400 and up.
+          CSI Ps $ w  Request presentation state report (DECRQPSR), VT320 and up.
+               Ps = 0  error.
+               Ps = 1  cursor information report (DECCIR).
+               Ps = 2  tab stop report (DECTABSR).
+          CSI Pt ; Pl ; Pb ; Pr ' w  Enable Filter Rectangle (DECEFR), VT420 and up.
+          CSI Ps x  Request Terminal Parameters (DECREQTPARM).
+          CSI Ps * x  Select Attribute Change Extent (DECSACE), VT420 and up.
+               Ps = 0  from start to end position, wrapped.
+               Ps = 1  from start to end position, wrapped.
+               Ps = 2  rectangle (exact).
+          CSI Pc ; Pt ; Pl ; Pb ; Pr $ x  Fill Rectangular Area (DECFRA), VT420 and up.
+          CSI Ps # y  Select checksum extension (XTCHECKSUM), xterm.
+          CSI Pi ; Pg ; Pt ; Pl ; Pb ; Pr * y  Request Checksum of Rectangular Area (DECRQCRA), VT420 and up.
+          CSI Ps ; Pu ' z  Enable Locator Reporting (DECELR).
+               Ps = 0  Locator disabled (default).
+               Ps = 1  Locator enabled.
+               Ps = 2  Locator enabled for one report, then disabled.
+               Pu = 0 or omitted  default to character cells.
+          CSI Pt ; Pl ; Pb ; Pr $ z  Erase Rectangular Area (DECERA), VT400 and up.
+          CSI Pm ' {  Select Locator Events (DECSLE).
+               Ps = 0  only respond to explicit host requests (DECRQLP).
+               Ps = 1  report button down transitions.
+               Ps = 2  do not report button down transitions.
+               Ps = 3  report button up transitions.
+               Ps = 4  do not report button up transitions.
+          CSI # {  Push video attributes onto stack (XTPUSHSGR), xterm.
+          CSI Pm # {  Push video attributes onto stack (XTPUSHSGR), xterm.
+               Ps = 1  Bold.
+               Ps = 2  Faint.
+               Ps = 3  Italicized.
+               Ps = 4  Underlined.
+               Ps = 5  Blink.
+               Ps = 7  Inverse.
+               Ps = 8  Invisible.
+               Ps = 9  Crossed-out characters.
+               Ps = 2 1  Doubly-underlined.
+               Ps = 3 0  Foreground color.
+               Ps = 3 1  Background color.
+          CSI Pt ; Pl ; Pb ; Pr $ {  Selective Erase Rectangular Area (DECSERA), VT400 and up.
+          CSI Pt ; Pl ; Pb ; Pr # |  Report selected graphic rendition (XTREPORTSGR), xterm.
+          CSI Ps $ |  Select columns per page (DECSCPP), VT340.
+               Ps = 0  80 columns, default if Ps omitted.
+               Ps = 8 0  80 columns.
+               Ps = 1 3 2  132 columns.
+          CSI Ps ' |  Request Locator Position (DECRQLP).
+               Ps = 0, 1 or omitted  transmit a single DECLRP locator report.
+          CSI Ps * |  Select number of lines per screen (DECSNLS), VT420 and up.
+          CSI # }  Pop video attributes from stack (XTPOPSGR), xterm.
+          CSI Ps ; Pf ; Pb , |  Assign Color (DECAC), VT525 only.
+               Ps = 1  normal text
+               Ps = 2  window frame
+          CSI Ps ; Pf ; Pb , }  Alternate Text Color (DECATC), VT525 only.
+               Ps = 0  normal text
+               Ps = 1  bold
+               Ps = 2  reverse
+               Ps = 3  underline
+               Ps = 4  blink
+               Ps = 5  bold reverse
+               Ps = 6  bold underline
+               Ps = 7  bold blink
+               Ps = 8  reverse underline
+               Ps = 9  reverse blink
+               Ps = 1 0  underline blink
+               Ps = 1 1  bold reverse underline
+               Ps = 1 2  bold reverse blink
+               Ps = 1 3  bold underline blink
+               Ps = 1 4  reverse underline blink
+               Ps = 1 5  bold reverse underline blink
+          CSI Ps ' }  Insert Ps Column(s) (default = 1) (DECIC), VT420 and up.
+          CSI Ps $ }  Select active status display (DECSASD), VT320 and up.
+               Ps = 0  main (default)
+               Ps = 1  status line
+          CSI Ps ' ~  Delete Ps Column(s) (default = 1) (DECDC), VT420 and up.
+          CSI Ps $ ~  Select status line type (DECSSDT), VT320 and up.
+               Ps = 0  none
+               Ps = 1  indicator (default)
+               Ps = 2  host-writable.
+     Operating System Commands
+          OSC Ps ; Pt BEL  Set Text Parameters, xterm.
+          OSC Ps ; Pt ST  Set Text Parameters, xterm.
+               Ps = 0  Change Icon Name and Window Title to Pt.
+               Ps = 1  Change Icon Name to Pt.
+               Ps = 2  Change Window Title to Pt.
+               Ps = 3  Set X property on top-level window.
+               Ps = 4 ;c ;spec  Change Color Number c to the color specified by spec.
+               Ps = 5 ;c ;spec  Change Special Color Number c to the color specified by spec.
+               Ps = 6 ;c ;f  Enable/disable Special Color Number c.
+               Ps = 1 0  Change VT100 text foreground color to Pt.
+               Ps = 1 1  Change VT100 text background color to Pt.
+               Ps = 1 2  Change text cursor color to Pt.
+               Ps = 1 3  Change pointer foreground color to Pt.
+               Ps = 1 4  Change pointer background color to Pt.
+               Ps = 1 5  Change Tektronix foreground color to Pt.
+               Ps = 1 6  Change Tektronix background color to Pt.
+               Ps = 1 7  Change highlight background color to Pt.
+               Ps = 1 8  Change Tektronix cursor color to Pt.
+               Ps = 1 9  Change highlight foreground color to Pt.
+               Ps = 2 2  Change pointer cursor shape to Pt.
+               Ps = 4 6  Change Log File to Pt.
+               Ps = 5 0  Set Font to Pt.
+               Ps = 5 1  reserved for Emacs shell.
+               Ps = 5 2  Manipulate Selection Data.
+               Ps = 6 0  Query allowed features (XTQALLOWED).
+               Ps = 6 1  Query disallowed features (XTQDISALLOWED).
+               Ps = 6 2  Query allowable features (XTQALLOWABLE).
+               Ps = 1 0 4 ;c  Reset Color Number c.
+               Ps = 1 0 5 ;c  Reset Special Color Number c.
+               Ps = 1 0 6 ;c ;f  Enable/disable Special Color Number c.
+               Ps = 1 1 0  Reset VT100 text foreground color.
+               Ps = 1 1 1  Reset VT100 text background color.
+               Ps = 1 1 2  Reset text cursor color.
+               Ps = 1 1 3  Reset pointer foreground color.
+               Ps = 1 1 4  Reset pointer background color.
+               Ps = 1 1 5  Reset Tektronix foreground color.
+               Ps = 1 1 6  Reset Tektronix background color.
+               Ps = 1 1 7  Reset highlight color.
+               Ps = 1 1 8  Reset Tektronix cursor color.
+               Ps = 1 1 9  Reset highlight foreground color.
+               Ps = I ;c  Set icon to file.
+               Ps = l ;c  Set window title.
+               Ps = L ;c  Set icon label.
+     Privacy Message
+          PM Pt ST  xterm implements no PM functions; Pt is ignored.
+ Special Keyboard Keys
+     Alt and Meta Keys
+     PC-Style Function Keys
+     VT220-Style Function Keys
+     VT52-Style Function Keys
+     Sun-Style Function Keys
+     HP-Style Function Keys
+     Non-Function Keys
+ The Alternate Screen Buffer
+ Bracketed Paste Mode
+ Readline Modes
+ Title Modes
+ Mouse Tracking
+     X10 compatibility mode
+     Normal tracking mode
+     Wheel mice
+     Other buttons
+     Highlight tracking
+     Button-event tracking
+     Any-event tracking
+     FocusIn/FocusOut
+     Extended coordinates
+ Graphics
+     Sixel Graphics
+          CSI Ps c  Send Device Attributes (Primary DA), DEC graphics terminals, xterm.
+               Ps = 4  Sixel graphics.
+          CSI ? Pm h  Set Mode (with corresponding Reset Mode CSI ? Pm l):
+               Ps = 8 0  Sixel Display Mode (DECSDM), VT330, VT340, VT382.
+               Ps = 1 0 7 0  use private color registers for each graphic,  xterm.
+               Ps = 8 4 5 2  Sixel scrolling leaves cursor to right of graphic, RLogin,  xterm.
+          DCS Pa ; Pb ; Ph q Ps.. Ps ST  Send SIXEL image, DEC graphics terminals, VT330, VT340, VT382.
+     ReGIS Graphics
+          CSI Ps c  Send Device Attributes (Primary DA), DEC graphics terminals, xterm.
+               Ps = 3  ReGIS graphics.
+          CSI ? Pm h  Set Mode, xterm.
+               Ps = 1 0 7 0  use private color registers for each graphic.
+          DCS Pm p Pr.. Pr ST  Enter or exit ReGIS, VT300, xterm.
+               Pm = 0  resume command, use fullscreen mode.
+               Pm = 1  start new command, use fullscreen mode.
+               Pm = 2  resume command, use command display mode.
+               Pm = 3  start new command, use command display mode.
+ Non-VT100 Modes
+     Tektronix 4014 Mode
+          BEL  Bell (Ctrl-G).
+          BS  Backspace (Ctrl-H).
+          TAB  Horizontal Tab (Ctrl-I).
+          LF  Line Feed or New Line (Ctrl-J).
+          VT  Cursor up (Ctrl-K).
+          FF  Form Feed or New Page (Ctrl-L).
+          CR  Carriage Return (Ctrl-M).
+          ESC ETX  Switch to VT100 Mode (ESC Ctrl-C).
+          ESC ENQ  Return Terminal Status (ESC Ctrl-E).
+          ESC FF  PAGE (Clear Screen) (ESC Ctrl-L).
+          ESC SO  Begin 4015 APL mode (ESC Ctrl-N).
+          ESC SI  End 4015 APL mode (ESC Ctrl-O).
+          ESC ETB  COPY (Save Tektronix Codes to file COPYyyyy-mm-dd.hh:mm:ss).
+          ESC CAN  Bypass Condition (ESC Ctrl-X).
+          ESC SUB  GIN mode (ESC Ctrl-Z).
+          ESC FS  Special Point Plot Mode (ESC Ctrl-\e).
+          ESC 8  Select Large Character Set.
+          ESC 9  Select #2 Character Set.
+          ESC :  Select #3 Character Set.
+          ESC ;  Select Small Character Set.
+          OSC Ps ; Pt BEL  Set Text Parameters of VT window.
+               Ps = 0  Change Icon Name and Window Title to Pt.
+               Ps = 1  Change Icon Name to Pt.
+               Ps = 2  Change Window Title to Pt.
+               Ps = 4 6  Change Log File to Pt.
+          ESC `  Normal Z Axis and Normal (solid) Vectors.
+          ESC a  Normal Z Axis and Dotted Line Vectors.
+          ESC b  Normal Z Axis and Dot-Dashed Vectors.
+          ESC c  Normal Z Axis and Short-Dashed Vectors.
+          ESC d  Normal Z Axis and Long-Dashed Vectors.
+          ESC h  Defocused Z Axis and Normal (solid) Vectors.
+          ESC i  Defocused Z Axis and Dotted Line Vectors.
+          ESC j  Defocused Z Axis and Dot-Dashed Vectors.
+          ESC k  Defocused Z Axis and Short-Dashed Vectors.
+          ESC l  Defocused Z Axis and Long-Dashed Vectors.
+          ESC p  Write-Thru Mode and Normal (solid) Vectors.
+          ESC q  Write-Thru Mode and Dotted Line Vectors.
+          ESC r  Write-Thru Mode and Dot-Dashed Vectors.
+          ESC s  Write-Thru Mode and Short-Dashed Vectors.
+          ESC t  Write-Thru Mode and Long-Dashed Vectors.
+          FS  Point Plot Mode (Ctrl-\e).
+          GS  Graph Mode (Ctrl-]).
+          RS  Incremental Plot Mode (Ctrl- ^).
+          US  Alpha Mode (Ctrl-_).
+     VT52 Mode
+          ESC <  Exit VT52 mode (Enter VT100 mode).
+          ESC =  Enter alternate keypad mode.
+          ESC >  Exit alternate keypad mode.
+          ESC A  Cursor up.
+          ESC B  Cursor down.
+          ESC C  Cursor right.
+          ESC D  Cursor left.
+          ESC F  Enter graphics mode.
+          ESC G  Exit graphics mode.
+          ESC H  Move the cursor to the home position.
+          ESC I  Reverse line feed.
+          ESC J  Erase from the cursor to the end of the screen.
+          ESC K  Erase from the cursor to the end of the line.
+          ESC Y Ps Ps  Move the cursor to given row and column.
+          ESC Z  Identify.
+ Further reading
+     Technical manuals
+     Standards
+     Miscellaneous
+
+

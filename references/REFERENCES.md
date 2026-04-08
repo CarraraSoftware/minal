@@ -30,6 +30,11 @@
     - [DPI Ozone Monitor](https://www.displayspecifications.com/en/model/8639175c#:~:text=108%20ppi%20(pixels%20per%20inch))
 
 - ANSI Escape Codes References:
-    - [Ghostty](https://ghostty.org/docs/vt/reference)
     - [ANSI Escape Codes](https://en.wikipedia.org/wiki/ANSI_escape_code)
+    - [Ghostty](https://ghostty.org/docs/vt/reference)
     - [MS Console Virtual](https://learn.microsoft.com/en-us/windows/console/console-virtual-terminal-sequences)
+    - [ECMA-48 - 5th Edition](https://ecma-international.org/wp-content/uploads/ECMA-48_5th_edition_june_1991.pdf)
+    - [ANSI TABLE - VT100/VT52](https://web.archive.org/web/20090227051140/http://ascii-table.com/ansi-escape-sequences-vt-100.php)
+    - [xterm - ctlseqs](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html)
+    - [xterm - ctlseqs](https://www.xfree86.org/current/ctlseqs.html)
+    - [wezterm - escape sequences](https://wezterm.org/escape-sequences.html#c0-control-codes)

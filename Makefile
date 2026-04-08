@@ -1,5 +1,5 @@
 minal:
-	gcc -ggdb -o minal minal.c -lSDL3 -lSDL3_ttf
+	gcc -ggdb -o build/minal minal.c -lSDL3 -lSDL3_ttf
 
 run: minal
-	./minal
+	./build/minal
