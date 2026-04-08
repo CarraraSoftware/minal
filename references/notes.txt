@@ -1,3 +1,20 @@
+// Color + Parse String Argument
+ESC OSC 10 <t> ST // STP_VT100_FG_COLOR               (Change VT100 text foreground color to Pt. 
+// Some information 
+ESC CSI c         // DEVICE ATTRIBUTES REPORT         (Request attributes from terminal.)
+ESC CSI > c       // SEND_DEVICE_ATTRIBUTES_SECONDARY (request the terminal's identification code.
+ESC CSI > q       // REPORT_XTERM_NAME_VERSION        (Report  xterm name and version (XTVERSION).
+// Text Area Size
+ESC CSI 18 t      // WINMAN_REPORT_TXTAREA_SIZE_CH    (Report the size of the text area in characters.               
+ESC CSI 14 t      // WINMAN_REPORT_TXTAREA_SIZE       (Report text area size in pixels.                              
+// FocusIn/FocusOut Events
+ESC CSI ? 1004    // DECSET_SEND_FOCUS_INOUT_EVENTS   (Send FocusIn/FocusOut events,  xterm. Enable reporting focus. Reports whenever terminal emulator enters or exits focus as ESC [I and ESC [O, respectively. 
+
+
+
+- limitar capacidade de expansão do buffer de linhas (remove first, append last)
+- fontconfig
+
 algumas\n
 strings\n
 antes\n

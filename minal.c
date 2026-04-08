@@ -29,17 +29,18 @@ void minal_spawn_shell(Minal *m) {
     };
 
     m->shell_pid = fork();
+    // ➜
     if (m->shell_pid == 0) {
         login_tty(slave_fd);
         char cols[50];
         char rows[50];
         char *path = "/usr/bin/bash";
         char *defaultshell = getenv("SHELL");
-        // if (defaultshell != NULL)
-        //     path = defaultshell;
+        if (defaultshell != NULL)
+            path = defaultshell;
         setenv("SHELL", path, true);
-        // setenv("TERM", "vt100", true);
-        setenv("TERM", "xterm", true);
+        setenv("TERM", "vt100", true);
+        // setenv("TERM", "xterm", true);
         // setenv("TERM", "dumb", true);
         setenv("PS1",  "$ ", true);
 
@@ -272,15 +273,15 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
             b = sv_chop_left(bytes);
 
             if (opt == 25) {
-                printf("TODO: CSI ? 25\n");
+                printf("TODO: CSI ? 25 %c\n", b);
             }
 
             if (opt == 1004) {
-                printf("TODO: CSI ? 1004 \n");
+                printf("TODO: CSI ? 1004  %c\n", b);
             }
 
             if (opt == 1049) {
-                printf("TODO: CSI ? 1049 \n");
+                printf("TODO: CSI ? 1049  %c\n", b);
             }
 
             if (opt == 2004) {
@@ -825,69 +826,151 @@ void minal_pagedown(Minal* m, size_t opt)
     m->row_offset += opt;
 }
 
+SDL_Color minal_select_color_by_index(Minal* m, int idx)
+{
+    SDL_Color clr;
 
-void minal_select_color(Minal* m, int op, SDL_Color* clr, bool* isbg)
+    if (idx > 255) {
+        return BASE_COLORS[BLACK];
+    }
+
+    if (idx < 16) {
+        return BASE_COLORS[idx];
+    }
+
+    if (idx > 231) {
+        idx -= 232;
+        int value = idx * 10 + 8;
+        return (SDL_Color) {
+            .r = value,
+            .g = value,
+            .b = value,
+            .a = 255,
+        };
+    }
+
+    idx -= 16;
+    int red   = idx / (6 * 6) % 6;
+    int green = idx / (6    ) % 6;
+    int blue  = idx % (6    ) % 6;
+    clr = (SDL_Color){
+        .r = red   != 0 ? 55 + 40 * red   : 0,
+        .g = green != 0 ? 55 + 40 * green : 0,
+        .b = blue  != 0 ? 55 + 40 * blue  : 0,
+        .a = 255,
+    };
+    return clr;
+}
+
+SDL_Color minal_select_color_extended(Minal* m, int r, int g, int b)
+{
+    SDL_Color c = {
+        .r = r,
+        .g = g,
+        .b = b,
+        .a = 255,
+    };
+    return c;
+}
+
+SDL_Color minal_select_color(Minal* m, int op)
 {
     switch (op) {
-         case SGR_FG_BLACK:          { *clr = BLACK;          *isbg = false; }; break;
-         case SGR_FG_RED:            { *clr = RED;            *isbg = false; }; break;
-         case SGR_FG_GREEN:          { *clr = GREEN;          *isbg = false; }; break;
-         case SGR_FG_YELLOW:         { *clr = YELLOW;         *isbg = false; }; break;
-         case SGR_FG_BLUE:           { *clr = BLUE;           *isbg = false; }; break;
-         case SGR_FG_MAGENTA:        { *clr = MAGENTA;        *isbg = false; }; break;
-         case SGR_FG_CYAN:           { *clr = CYAN;           *isbg = false; }; break;
-         case SGR_FG_WHITE:          { *clr = WHITE;          *isbg = false; }; break;
-         case SGR_FG_DEFAULT:        { *clr = DEFAULT;        *isbg = false; }; break;
-         case SGR_FG_BRIGHT_BLACK:   { *clr = BRIGHT_BLACK;   *isbg = false; }; break;
-         case SGR_FG_BRIGHT_RED:     { *clr = BRIGHT_RED;     *isbg = false; }; break;
-         case SGR_FG_BRIGHT_GREEN:   { *clr = BRIGHT_GREEN;   *isbg = false; }; break;
-         case SGR_FG_BRIGHT_YELLOW:  { *clr = BRIGHT_YELLOW;  *isbg = false; }; break;
-         case SGR_FG_BRIGHT_BLUE:    { *clr = BRIGHT_BLUE;    *isbg = false; }; break;
-         case SGR_FG_BRIGHT_MAGENTA: { *clr = BRIGHT_MAGENTA; *isbg = false; }; break;
-         case SGR_FG_BRIGHT_CYAN:    { *clr = BRIGHT_CYAN;    *isbg = false; }; break;
-         case SGR_FG_BRIGHT_WHITE:   { *clr = BRIGHT_WHITE;   *isbg = false; }; break;
-         case SGR_BG_BLACK:          { *clr = BLACK;          *isbg = true;  }; break;
-         case SGR_BG_RED:            { *clr = RED;            *isbg = true;  }; break;
-         case SGR_BG_GREEN:          { *clr = GREEN;          *isbg = true;  }; break;
-         case SGR_BG_YELLOW:         { *clr = YELLOW;         *isbg = true;  }; break;
-         case SGR_BG_BLUE:           { *clr = BLUE;           *isbg = true;  }; break;
-         case SGR_BG_MAGENTA:        { *clr = MAGENTA;        *isbg = true;  }; break;
-         case SGR_BG_CYAN:           { *clr = CYAN;           *isbg = true;  }; break;
-         case SGR_BG_WHITE:          { *clr = WHITE;          *isbg = true;  }; break;
-         case SGR_BG_DEFAULT:        { *clr = DEFAULT;        *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_BLACK:   { *clr = BRIGHT_BLACK;   *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_RED:     { *clr = BRIGHT_RED;     *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_GREEN:   { *clr = BRIGHT_GREEN;   *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_YELLOW:  { *clr = BRIGHT_YELLOW;  *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_BLUE:    { *clr = BRIGHT_BLUE;    *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_MAGENTA: { *clr = BRIGHT_MAGENTA; *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_CYAN:    { *clr = BRIGHT_CYAN;    *isbg = true;  }; break;
-         case SGR_BG_BRIGHT_WHITE:   { *clr = BRIGHT_WHITE;   *isbg = true;  }; break;
+        case SGR_FG_BLACK:          { return BASE_COLORS[BLACK];            };
+        case SGR_FG_RED:            { return BASE_COLORS[RED];              };
+        case SGR_FG_GREEN:          { return BASE_COLORS[GREEN];            };
+        case SGR_FG_YELLOW:         { return BASE_COLORS[YELLOW];           };
+        case SGR_FG_BLUE:           { return BASE_COLORS[BLUE];             };
+        case SGR_FG_MAGENTA:        { return BASE_COLORS[MAGENTA];          };
+        case SGR_FG_CYAN:           { return BASE_COLORS[CYAN];             };
+        case SGR_FG_WHITE:          { return BASE_COLORS[WHITE];            };
+        case SGR_FG_DEFAULT:        { return BASE_COLORS[DEFAULT_FG_COLOR]; };
+        case SGR_FG_BRIGHT_BLACK:   { return BASE_COLORS[BRIGHT_BLACK];     };
+        case SGR_FG_BRIGHT_RED:     { return BASE_COLORS[BRIGHT_RED];       };
+        case SGR_FG_BRIGHT_GREEN:   { return BASE_COLORS[BRIGHT_GREEN];     };
+        case SGR_FG_BRIGHT_YELLOW:  { return BASE_COLORS[BRIGHT_YELLOW];    };
+        case SGR_FG_BRIGHT_BLUE:    { return BASE_COLORS[BRIGHT_BLUE];      };
+        case SGR_FG_BRIGHT_MAGENTA: { return BASE_COLORS[BRIGHT_MAGENTA];   };
+        case SGR_FG_BRIGHT_CYAN:    { return BASE_COLORS[BRIGHT_CYAN];      };
+        case SGR_FG_BRIGHT_WHITE:   { return BASE_COLORS[BRIGHT_WHITE];     };
+        case SGR_BG_BLACK:          { return BASE_COLORS[BLACK];            };
+        case SGR_BG_RED:            { return BASE_COLORS[RED];              };
+        case SGR_BG_GREEN:          { return BASE_COLORS[GREEN];            };
+        case SGR_BG_YELLOW:         { return BASE_COLORS[YELLOW];           };
+        case SGR_BG_BLUE:           { return BASE_COLORS[BLUE];             };
+        case SGR_BG_MAGENTA:        { return BASE_COLORS[MAGENTA];          };
+        case SGR_BG_CYAN:           { return BASE_COLORS[CYAN];             };
+        case SGR_BG_WHITE:          { return BASE_COLORS[WHITE];            };
+        case SGR_BG_DEFAULT:        { return BASE_COLORS[DEFAULT_BG_COLOR]; };
+        case SGR_BG_BRIGHT_BLACK:   { return BASE_COLORS[BRIGHT_BLACK];     };
+        case SGR_BG_BRIGHT_RED:     { return BASE_COLORS[BRIGHT_RED];       };
+        case SGR_BG_BRIGHT_GREEN:   { return BASE_COLORS[BRIGHT_GREEN];     };
+        case SGR_BG_BRIGHT_YELLOW:  { return BASE_COLORS[BRIGHT_YELLOW];    };
+        case SGR_BG_BRIGHT_BLUE:    { return BASE_COLORS[BRIGHT_BLUE];      };
+        case SGR_BG_BRIGHT_MAGENTA: { return BASE_COLORS[BRIGHT_MAGENTA];   };
+        case SGR_BG_BRIGHT_CYAN:    { return BASE_COLORS[BRIGHT_CYAN];      };
+        case SGR_BG_BRIGHT_WHITE:   { return BASE_COLORS[BRIGHT_WHITE];     };
+        default: {
+            printf("SGR: unhandled op: %d\n", op);
+            return BASE_COLORS[DEFAULT_FG_COLOR];
+        };
     }
 }
 
 void minal_graphic_mode(Minal* m, int* argv, int argc)
 {
     if (argc == 0) {
+        // NOTE: ESC CSI m is treated as ESC CSI 0 m
         argv[argc++] = 0;
     }
-
-    for (int i = 0; i < argc; ++i) {
-        int op = argv[i];
-        if (op == 0) {
-            m->cursor.style.fg_color = DEFAULT_FG_COLOR;
-            m->cursor.style.bg_color = DEFAULT_BG_COLOR;
-            return;
-        }
-
+    int i = 0; 
+    while (i < argc) {
         SDL_Color clr;
         bool isbg;
-        minal_select_color(m, op, &clr, &isbg);
+        int op = argv[i];
+        if ((0 <= op && op <= 9) ||
+           (21 <= op && op <= 29)) {
+            i++;
+            continue;
+        }
+
+        if (op == 38 || op == 48) {
+            isbg = op == 48;
+            if (i + 1 >= argc) {
+                clr = isbg ? BASE_COLORS[DEFAULT_BG_COLOR] : BASE_COLORS[DEFAULT_FG_COLOR];
+                goto setcolor;
+            };
+            i++;
+            if (argv[i] == 5) {
+                assert(i + 1 < argc);
+                int idx = argv[++i];
+                clr = minal_select_color_by_index(m, idx);
+                goto setcolor;
+            } else if (argv[i] == 2) {
+                assert(i + 3 < argc);
+                int r = argv[++i];
+                int g = argv[++i];
+                int b = argv[++i];
+                clr = minal_select_color_extended(m, r, g, b);
+                goto setcolor;
+            }
+        }
+
+        if ((30 <= op && op <= 49) ||
+            (90 <= op && op <= 107))
+        {
+            isbg =(40 <= op && op <= 49) || (100 <= op && op <= 107);
+            clr = minal_select_color(m, op);
+            goto setcolor;
+        }
+
+    setcolor:
         if (isbg) {
             m->cursor.style.bg_color = clr;
         } else {
             m->cursor.style.fg_color = clr;
         }
+        i++;
     }
 }
 
@@ -1257,7 +1340,6 @@ void minal_carriageret(Minal* m)
 
 void minal_receiver(Minal* m)
 {
-
     size_t offset = 0;
     char _buf[_32K];
     while (true) {
@@ -1601,7 +1683,6 @@ void minal_transmitter(Minal* m, SDL_Event* event)
 
 void minal_render_text(Minal* m)
 {
-    SDL_Color last_color = DEFAULT_FG_COLOR;
     float x = 0;
     float y = 0;
 
@@ -1650,7 +1731,7 @@ void minal_render_text(Minal* m)
         StringView l = sv_chop_line(&screen);
         x = 0;
         for (size_t col = 0; col < m->config.n_cols; ++col) {
-            Style style = m->styles.items[row].items[col];
+            Style style = m->styles.items[m->row_offset + row].items[col];
             SDL_FRect bg = {
                 .x = x,
                 .y = y,
@@ -1747,6 +1828,8 @@ void minal_finish(Minal *m)
 
 int main(void)
 {
+
+
     Minal m = minal_init();
     minal_run(&m);
     minal_finish(&m);

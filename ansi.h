@@ -443,15 +443,15 @@ SOFTWARE.
 #define SGR_SEMICOLLON_SEPARATOR      ';'   //   --                                       | == 
 //    {  SGR_FG_EXTENDED
 #define SGR_FG_EXTENDED_COLOR_PREFIX   38   //   --                                       | Prefix for setting the foreground color with the 256 extended color pallete.
-#define SGR_FG_EXTCLR_RGB               2   //   ESC CSI 38 : 2 : <i> : <r> : <g> : <b>   | Set foreground color using RGB values.            
-#define SGR_FG_EXTCLR_INDEX             5   //   ESC CSI 38 : 5 : <i>                     | Set foreground color to <n>, using indexed color.  
-#define SGR_FG_EXTCLR_RGB_2             2   //   ESC CSI 38 ; 2 ; <r> ; <g> ; <b>         | Set foreground color using RGB values.            
+#define SGR_FG_EXTCLR_RGB               2   //   ESC CSI 38 : 2 : <i> : <r> : <g> : <b> m | Set foreground color using RGB values.            
+#define SGR_FG_EXTCLR_INDEX             5   //   ESC CSI 38 : 5 : <i>                   m | Set foreground color to <n>, using indexed color.  
+#define SGR_FG_EXTCLR_RGB_2             2   //   ESC CSI 38 ; 2 ; <r> ; <g> ; <b>       m | Set foreground color using RGB values.            
 //    }
 //    { SGR_BG_EXTENDED
 #define SGR_BG_EXTENDED_COLOR_PREFIX   48   //   --                                       | Prefix for setting the background color with the 256 extended color pallete. 
-#define SGR_BG_EXTCLR_RGB               2   //   ESC CSI 48 : 2 : <i> : <r> : <g> : <b>   | Set background color using RGB values.                                       
-#define SGR_BG_EXTCLR_INDEX             5   //   ESC CSI 48 : 5 : <i>                     | Set background color to <n>, using indexed color.                             
-#define SGR_BG_EXTCLR_RGB_2             2   //   ESC CSI 48 ; 2 ; <r> ; <g> ; <b>         | Set background color using RGB values.                                       
+#define SGR_BG_EXTCLR_RGB               2   //   ESC CSI 48 : 2 : <i> : <r> : <g> : <b> m | Set background color using RGB values.                                       
+#define SGR_BG_EXTCLR_INDEX             5   //   ESC CSI 48 : 5 : <i>                   m | Set background color to <n>, using indexed color.                             
+#define SGR_BG_EXTCLR_RGB_2             2   //   ESC CSI 48 ; 2 ; <r> ; <g> ; <b>       m | Set background color using RGB values.                                       
 //    }  SGR_BG
 // } SELECT_GRAPHIC_RENDITION
 // { DEVICE_STATUS_REPORT (DSR)
@@ -643,7 +643,7 @@ SOFTWARE.
 #define DECSET_HILITE_MOUSE_TRACKING      1001  // ESC CSI ? 1001  h                      | Use Hilite Mouse Tracking,  xterm.
 #define DECSET_CELL_MOTION_MOUSE_TRACKING 1002  // ESC CSI ? 1002  h                      | Use Cell Motion Mouse Tracking,  xterm.
 #define DECSET_ALL_MOTION_MOUSE_TRACKING  1003  // ESC CSI ? 1003  h                      | Use All Motion Mouse Tracking,  xterm.
-#define DECSET_SEND_FOCUS_INOUT_EVENTS    1004  // ESC CSI ? 1004  h                      | Send FocusIn/FocusOut events,  xterm.
+#define DECSET_SEND_FOCUS_INOUT_EVENTS    1004  // ESC CSI ? 1004  h                      | Send FocusIn/FocusOut events,  xterm.  Enable reporting focus. Reports whenever terminal emulator enters or exits focus as ESC [I and ESC [O, respectively. 
 #define DECSET_UTF8_MOUSE_MODE            1005  // ESC CSI ? 1005  h                      | Enable UTF-8 Mouse Mode,  xterm.
 #define DECSET_SGR_MOUSE_MODE             1006  // ESC CSI ? 1006  h                      | Enable SGR Mouse Mode,  xterm.
 #define DECSET_ALTERNATE_SCROLL_MODE      1007  // ESC CSI ? 1007  h                      | Enable Alternate Scroll Mode,  xterm.

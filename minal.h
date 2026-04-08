@@ -32,7 +32,13 @@
 #include "carrlib/vec.h"
 #include "ansi.h"
 
-#define FONT_FILE           "resources/font.ttf"
+// #define FONT_FILE           "resources/font.ttf"
+#define FONT_FILE           "resources/SourceCodePro/SauceCodeProNerdFont-Regular.ttf"
+// #define FONT_FILE           "resources/CodeNewRoman/CodeNewRomanNerdFontMono-Regular.otf"
+// #define FONT_FILE           "resources/Monoid/MonoidNerdFont-Regular.ttf"
+// #define FONT_FILE           "resources/SpaceMono/SpaceMonoNerdFont-Regular.ttf"
+// #define FONT_FILE           "resources/gnu-free/FreeMono.otf"
+// #define FONT_FILE           "resources/Adwaita/AdwaitaMono-Regular.ttf"
 #define DEFAULT_FONT_SIZE   18.0f
 #define DEFAULT_DISPLAY_DPI 96
 #define DEFAULT_N_COLS      80
@@ -150,7 +156,9 @@ void        minal_pagedown(Minal* m, size_t opt);
 void        minal_linefeed(Minal* m);
 void        minal_carriageret(Minal* m);
 void        minal_graphic_mode(Minal* m, int* argv, int argc);
-void        minal_select_color(Minal* m, int op, SDL_Color* clr, bool* isbg);
+SDL_Color   minal_select_color(Minal* m, int op);
+SDL_Color   minal_select_color_by_index(Minal* m, int idx);
+SDL_Color   minal_select_color_extended(Minal* m, int r, int g, int b);
 
 // cursor 
 SDL_FRect   minal_cursor_to_rect(Minal* m);
@@ -196,23 +204,47 @@ size_t      utf8_chrlen(char ch);
 #define DEFAULT_FG_COLOR WHITE
 #define DEFAULT_BG_COLOR BLACK
 
-const SDL_Color BRIGHT_BLACK    = { .r = 42 , .g = 42 , .b = 42 , .a = 255 };
-const SDL_Color BRIGHT_RED      = { .r = 230, .g = 10 , .b = 10 , .a = 255 };
-const SDL_Color BRIGHT_GREEN 	= { .r = 10 , .g = 230, .b = 10 , .a = 255 };
-const SDL_Color BRIGHT_YELLOW 	= { .r = 230, .g = 230, .b = 10 , .a = 255 };
-const SDL_Color BRIGHT_BLUE 	= { .r = 10 , .g = 10 , .b = 230, .a = 255 };
-const SDL_Color BRIGHT_MAGENTA  = { .r = 230, .g = 10 , .b = 230, .a = 255 };
-const SDL_Color BRIGHT_CYAN 	= { .r = 10 , .g = 230, .b = 230, .a = 255 };
-const SDL_Color BRIGHT_WHITE 	= { .r = 230, .g = 230, .b = 230, .a = 255 };
-const SDL_Color DEFAULT         = { .r = 230, .g = 230, .b = 230, .a = 255 };
-const SDL_Color BLACK           = { .r = 0  , .g = 0  , .b = 0  , .a = 255 };
-const SDL_Color RED 	        = { .r = 200, .g = 50 , .b = 50 , .a = 255 };
-const SDL_Color GREEN           = { .r = 50 , .g = 200, .b = 50 , .a = 255 };
-const SDL_Color YELLOW          = { .r = 200, .g = 200, .b = 50 , .a = 255 };
-const SDL_Color BLUE            = { .r = 50 , .g = 50 , .b = 200, .a = 255 };
-const SDL_Color MAGENTA         = { .r = 200, .g = 50 , .b = 200, .a = 255 };
-const SDL_Color CYAN            = { .r = 50 , .g = 200, .b = 200, .a = 255 };
-const SDL_Color WHITE           = { .r = 200, .g = 200, .b = 200, .a = 255 };
+// Colors from Debug console, "Dark+" theme for VSCode.
+// Source: https://en.wikipedia.org/wiki/ANSI_escape_code#Colors
+
+enum {
+     BLACK,
+     RED,
+     GREEN,
+     YELLOW,
+     BLUE,
+     MAGENTA,
+     CYAN,
+     WHITE,
+     BRIGHT_BLACK,
+     BRIGHT_RED,
+     BRIGHT_GREEN,
+     BRIGHT_YELLOW,
+     BRIGHT_BLUE,
+     BRIGHT_MAGENTA,
+     BRIGHT_CYAN,
+     BRIGHT_WHITE,
+};
+
+const SDL_Color BASE_COLORS[] = {
+     [BLACK]           = { .r =   0, .g =   0, .b =   0, .a = 255 },
+     [RED]             = { .r = 205, .g =  49, .b =  49, .a = 255 },
+     [GREEN] 	       = { .r =  13, .g = 188, .b = 121, .a = 255 },
+     [YELLOW] 	       = { .r = 229, .g = 229, .b =  16, .a = 255 },
+     [BLUE] 	       = { .r =  36, .g = 114, .b = 200, .a = 255 },
+     [MAGENTA]         = { .r = 188, .g =  63, .b = 188, .a = 255 },
+     [CYAN] 	       = { .r =  17, .g = 168, .b = 205, .a = 255 },
+     [WHITE] 	       = { .r = 230, .g = 230, .b = 230, .a = 255 },
+     [BRIGHT_BLACK]    = { .r = 102, .g = 102, .b = 102, .a = 255 },
+     [BRIGHT_RED] 	   = { .r = 241, .g =  76, .b =  76, .a = 255 },
+     [BRIGHT_GREEN]    = { .r =  35, .g = 209, .b = 139, .a = 255 },
+     [BRIGHT_YELLOW]   = { .r = 247, .g = 247, .b =  67, .a = 255 },
+     [BRIGHT_BLUE]     = { .r =  59, .g = 142, .b = 234, .a = 255 },
+     [BRIGHT_MAGENTA]  = { .r = 214, .g = 112, .b = 214, .a = 255 },
+     [BRIGHT_CYAN]     = { .r =  41, .g = 184, .b = 219, .a = 255 },
+     [BRIGHT_WHITE]    = { .r = 229, .g = 229, .b = 229, .a = 255 },
+};
+
 
 const Style DEFAULT_STYLE = {
     .bold      = false,
@@ -223,8 +255,8 @@ const Style DEFAULT_STYLE = {
     .inverse   = false,
     .hidden    = false,
     .strike    = false,
-    .fg_color  = DEFAULT_FG_COLOR,
-    .bg_color  = DEFAULT_BG_COLOR,
+    .fg_color  = BASE_COLORS[DEFAULT_FG_COLOR],
+    .bg_color  = BASE_COLORS[DEFAULT_BG_COLOR],
 };
 
 
