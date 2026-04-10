@@ -1,4 +1,5 @@
 #include "minal.h"
+#include "convert.h"
 
 bool is_utf8_head(uint8_t ch)
 {
@@ -29,7 +30,6 @@ void minal_spawn_shell(Minal *m) {
     };
 
     m->shell_pid = fork();
-    // ➜
     if (m->shell_pid == 0) {
         login_tty(slave_fd);
         char cols[50];
@@ -39,10 +39,14 @@ void minal_spawn_shell(Minal *m) {
         if (defaultshell != NULL)
             path = defaultshell;
         setenv("SHELL", path, true);
-        setenv("TERM", "vt100", true);
-        // setenv("TERM", "xterm", true);
+        // setenv("TERM", "vt100", true);
+        setenv("TERM", "xterm", true);
         // setenv("TERM", "dumb", true);
-        setenv("PS1",  "$ ", true);
+        // setenv("PS1",  "\e[32m\xE2\x86\x92\e[m ", true);
+        // setenv("PS1", "➜ ", true);
+        // setenv("PS1",  "\e[32m\xE2\x9E\x9C\e[m ", true);
+        // setenv("PS1",  "$ ", true);
+
 
         sprintf(cols, "%d", m->config.n_cols);
         sprintf(rows, "%d", m->config.n_rows);
@@ -121,16 +125,16 @@ Minal minal_init()
     m.config.font = TTF_OpenFont(FONT_FILE, m.config.font_size);
     assert(m.config.font != NULL);
 
-    TTF_Font* fallback1 = TTF_OpenFont(FONT_FILE1,m.config.font_size); 
-    TTF_Font* fallback2 = TTF_OpenFont(FONT_FILE2,m.config.font_size); 
-    assert(fallback1 && fallback2 && "Could not load fallback fonts");
+    TTF_Font* fallback1 = TTF_OpenFont(FALLBACK_1,m.config.font_size); 
+    TTF_Font* fallback2 = TTF_OpenFont(FALLBACK_2,m.config.font_size); 
+    TTF_Font* fallback3 = TTF_OpenFont(FALLBACK_3,m.config.font_size); 
+    assert(fallback1 && "Could not load fallback1 font");
+    assert(fallback2 && "Could not load fallback2 font");
+    assert(fallback3 && "Could not load fallback3 font");
 
-    TTF_AddFallbackFont(m.config.font, fallback1);
+    TTF_AddFallbackFont(m.config.font, fallback3);
     TTF_AddFallbackFont(m.config.font, fallback2);
-
-    // Test checando por caracteres especiais
-    // printf("HasGlyph U+E0B0: %d\n", TTF_FontHasGlyph(m.config.font, 0xE0B0));
-    // printf("HasGlyph U+279C: %d\n", TTF_FontHasGlyph(m.config.font, 0x279C));
+    TTF_AddFallbackFont(m.config.font, fallback1);
 
     assert(TTF_SetFontSizeDPI(m.config.font, m.config.font_size, m.config.display_dpi, m.config.display_dpi));
 
@@ -158,14 +162,6 @@ Minal minal_init()
     }
     m.lines = lines;
     
-    Styles styles = {0};
-    vec_expandto(&styles, m.config.n_rows);
-    for (int i = 0; i < m.config.n_rows; ++i) {
-        LineStyle l = minal_linestyle_alloc(&m);
-        vec_append(&styles, l);
-    }
-    m.styles = styles;
-
     StringBuilder screen = sb_with_cap(m.config.n_rows * m.config.n_cols * 4);
     m.screen = screen;
 
@@ -177,6 +173,9 @@ Minal minal_init()
         .style = DEFAULT_STYLE,
     };
 
+    m.autowrap = true;
+
+    assert(SDL_StartTextInput(m.window));
     return m;
 }
 
@@ -203,6 +202,198 @@ void minal_parse_ansi_args(Minal* m, StringView* bytes, int* argc, int argv[])
         sv_chop_left(bytes);
     }
 }
+
+void minal_parse_ansi_osc(Minal* m, StringView* bytes)
+{
+    uint8_t b = sv_first(bytes);
+
+    int argv[10];
+    int argc = 0;
+    if (isdigit(b)) {
+        minal_parse_ansi_args(m, bytes, &argc, argv);
+        assert(argc > 0);
+        b = argv[0];
+    }
+
+    switch (b) {
+        case STP_ICON_NAME_WINDOW_TITLE: {
+            printf("TODO: STP_ICON_NAME_WINDOW_TITLE\n");
+        }; break;
+
+        case STP_ICON_NAME: {
+            printf("TODO: STP_ICON_NAME\n");
+        }; break;
+
+        case STP_WINDOW_TITLE: {
+            printf("TODO: STP_WINDOW_TITLE\n");
+        }; break;
+
+        case STP_X_PROPERTY: {
+            printf("TODO: STP_X_PROPERTY\n");
+        }; break;
+
+        case STP_COLOR_NUMBER: {
+            printf("TODO: STP_COLOR_NUMBER\n");
+        }; break;
+
+        case STP_SPECIAL_COLOR_NUMBER: {
+            printf("TODO: STP_SPECIAL_COLOR_NUMBER\n");
+        }; break;
+
+        case STP_TOGGLE_SPECIAL_CLRNUM: {
+            printf("TODO: STP_TOGGLE_SPECIAL_CLRNUM\n");
+        }; break;
+
+        case STP_VT100_FG_COLOR: {
+            printf("TODO: STP_VT100_FG_COLOR\n");
+        }; break;
+
+        case STP_VT100_BG_COLOR: {
+            printf("TODO: STP_VT100_BG_COLOR\n");
+        }; break;
+
+        case STP_TEXT_CURSOR_COLOR: {
+            printf("TODO: STP_TEXT_CURSOR_COLOR\n");
+        }; break;
+
+        case STP_POINTER_FG_COLOR: {
+            printf("TODO: STP_POINTER_FG_COLOR\n");
+        }; break;
+
+        case STP_POINTER_BG_COLOR: {
+            printf("TODO: STP_POINTER_BG_COLOR\n");
+        }; break;
+
+        case STP_TEKTRONIX_FG_COLOR: {
+            printf("TODO: STP_TEKTRONIX_FG_COLOR\n");
+        }; break;
+
+        case STP_TEKTRONIX_BG_COLOR: {
+            printf("TODO: STP_TEKTRONIX_BG_COLOR\n");
+        }; break;
+
+        case STP_HIGHLIGHT_BG_COLOR: {
+            printf("TODO: STP_HIGHLIGHT_BG_COLOR\n");
+        }; break;
+
+        case STP_TEKTRONIX_CURSOR_COLOR: {
+            printf("TODO: STP_TEKTRONIX_CURSOR_COLOR\n");
+        }; break;
+
+        case STP_HIGHLIGHT_FG_COLOR: {
+            printf("TODO: STP_HIGHLIGHT_FG_COLOR\n");
+        }; break;
+
+        case STP_POINTER_CURSOR_SHAPE: {
+            printf("TODO: STP_POINTER_CURSOR_SHAPE\n");
+        }; break;
+
+        case STP_CHANGE_LOG_FILE: {
+            printf("TODO: STP_CHANGE_LOG_FILE\n");
+        }; break;
+
+        case STP_SET_FONT: {
+            printf("TODO: STP_SET_FONT\n");
+        }; break;
+
+        case STP_FOR_EMACS: {
+            printf("TODO: STP_FOR_EMACS\n");
+        }; break;
+
+        case STP_MANIP_SELECTION_DATA: {
+            printf("TODO: STP_MANIP_SELECTION_DATA\n");
+        }; break;
+
+        case STP_XTERM_QUERY_ALLOWED: {
+            printf("TODO: STP_XTERM_QUERY_ALLOWED\n");
+        }; break;
+
+        case STP_XTERM_QUERY_DISALLOWED: {
+            printf("TODO: STP_XTERM_QUERY_DISALLOWED\n");
+        }; break;
+
+        case STP_XTERM_QUERY_ALLOWABLE: {
+            printf("TODO: STP_XTERM_QUERY_ALLOWABLE\n");
+        }; break;
+
+        case STP_RESET_COLOR: {
+            printf("TODO: STP_RESET_COLOR\n");
+        }; break;
+
+        case STP_RESET_SPECIAL_COLOR: {
+            printf("TODO: STP_RESET_SPECIAL_COLOR\n");
+        }; break;
+
+        case STP_TOGGLE_SPECIAL_COLOR: {
+            printf("TODO: STP_TOGGLE_SPECIAL_COLOR\n");
+        }; break;
+
+        case STP_RESET_VT100_TXTFGCLR: {
+            printf("TODO: STP_RESET_VT100_TXTFGCLR\n");
+        }; break;
+
+        case STP_RESET_VT100_TXTBGCLR: {
+            printf("TODO: STP_RESET_VT100_TXTBGCLR\n");
+        }; break;
+
+        case STP_RESET_TEXT_CURSOR_COLOR: {
+            printf("TODO: STP_RESET_TEXT_CURSOR_COLOR\n");
+        }; break;
+
+        case STP_RESET_POINTER_FG_COLOR: {
+            printf("TODO: STP_RESET_POINTER_FG_COLOR\n");
+        }; break;
+
+        case STP_RESET_POINTER_BG_COLOR: {
+            printf("TODO: STP_RESET_POINTER_BG_COLOR\n");
+        }; break;
+
+        case STP_RESET_TKTX_FG_COLOR: {
+            printf("TODO: STP_RESET_TKTX_FG_COLOR\n");
+        }; break;
+
+        case STP_RESET_TKTX_BG_COLOR: {
+            printf("TODO: STP_RESET_TKTX_BG_COLOR\n");
+        }; break;
+
+        case STP_RESET_HIGHLIGHT_COLOR: {
+            printf("TODO: STP_RESET_HIGHLIGHT_COLOR\n");
+        }; break;
+
+        case STP_RESET_TKTX_CURSOR_COLOR: {
+            printf("TODO: STP_RESET_TKTX_CURSOR_COLOR\n");
+        }; break;
+
+        case STP_RESET_HIGHLIGHT_FGCOLOR: {
+            printf("TODO: STP_RESET_HIGHLIGHT_FGCOLOR\n");
+        }; break;
+
+        case STP_SET_ICON_TO_FILE: {
+            printf("TODO: STP_SET_ICON_TO_FILE\n");
+        }; break;
+
+        case STP_SET_WINDOW_TITLE: {
+            printf("TODO: STP_SET_WINDOW_TITLE\n");
+        }; break;
+
+        case STP_SET_ICON_LABEL: {
+            printf("TODO: STP_SET_ICON_LABEL\n");
+        }; break;
+
+        case STP_TODO_FIGURE_THIS_OUT: {
+            printf("TODO: ESC OSC 7; <t> ST => WHAT THE F IS ?THIS MA?N?????\n");
+        }; break;
+
+
+        default: printf("UNKNOWN OSC COMMAND: %08b | %02X (%c)\n", b, b, b); break;
+    }
+
+    b = sv_chop_left(bytes);
+    while (b != STP_TERMINATOR_1 && b != STP_TERMINATOR_2) {
+        b = sv_chop_left(bytes);
+    }
+}
+
 
 void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 {
@@ -270,6 +461,7 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 case 't': {
                     printf("TODO CSI > '%c'\n", b);
                 }; break;
+                default: printf("UNKNOWN subcommando for CSI_GT_PREFIX: %08b | %02X (%c)\n", b, b, b);
             }
             return;
         };
@@ -284,26 +476,84 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 
             b = sv_chop_left(bytes);
 
-            if (opt == 25) {
-                printf("TODO: CSI ? 25 %c\n", b);
-            }
-
-            if (opt == 1004) {
-                printf("TODO: CSI ? 1004  %c\n", b);
-            }
-
-            if (opt == 1049) {
-                printf("TODO: CSI ? 1049  %c\n", b);
-            }
-
-            if (opt == 2004) {
-                if (b == 'h') {
-                    m->bracket_mode = true;
-                }
-
-                if (b == 'l') {
-                    m->bracket_mode = false;
-                }
+            switch (opt) {
+                case DECSET_APPLICATION_CURSOR_KEYS:    { printf("TODO: DECSET_APPLICATION_CURSOR_KEYS\n"); } break;    
+                case DECSET_DESIGNATE_USASCII_G0_TO_G3: { printf("TODO: DECSET_DESIGNATE_USASCII_G0_TO_G3\n"); } break; 
+                case DECSET_COLUMN_MODE:                { printf("TODO: DECSET_COLUMN_MODE\n"); } break;                
+                case DECSET_SMOOTH_SCROLL:              { printf("TODO: DECSET_SMOOTH_SCROLL\n"); } break;              
+                case DECSET_REVERSE_VIDEO:              { printf("TODO: DECSET_REVERSE_VIDEO\n"); } break;              
+                case DECSET_ORIGIN_MODE:                { printf("TODO: DECSET_ORIGIN_MODE\n"); } break;                
+                case DECSET_AUTO_WRAP_MODE:             { m->autowrap = b == 'h'; } break;             
+                case DECSET_AUTO_REPEAT_KEYS:           { printf("TODO: DECSET_AUTO_REPEAT_KEYS\n"); } break;           
+                case DECSET_SEND_MOUSE_X_Y_ON_BUTPRESS: { printf("TODO: DECSET_SEND_MOUSE_X_Y_ON_BUTPRESS\n"); } break; 
+                case DECSET_SHOW_TOOLBAR:               { printf("TODO: DECSET_SHOW_TOOLBAR\n"); } break;               
+                case DECSET_START_BLINKING_CURSOR:      { printf("TODO: DECSET_START_BLINKING_CURSOR\n"); } break;      
+                case DECSET_START_BLINKING_CURSOR_2:    { printf("TODO: DECSET_START_BLINKING_CURSOR_2\n"); } break;    
+                case DECSET_XOR_BLINKING_CURSOR:        { printf("TODO: DECSET_XOR_BLINKING_CURSOR\n"); } break;        
+                case DECSET_PRINT_FORM_FEED:            { printf("TODO: DECSET_PRINT_FORM_FEED\n"); } break;            
+                case DECSET_SET_PRINT_EXT_FULLSCREEN:   { printf("TODO: DECSET_SET_PRINT_EXT_FULLSCREEN\n"); } break;   
+                case DECSET_SHOW_CURSOR:                { printf("TODO: DECSET_SHOW_CURSOR\n"); } break;                
+                case DECSET_SHOW_SCROLLBAR:             { printf("TODO: DECSET_SHOW_SCROLLBAR\n"); } break;             
+                case DECSET_ENB_FONT_SHIFTING:          { printf("TODO: DECSET_ENB_FONT_SHIFTING\n"); } break;          
+                case DECSET_ENTER_TEKTRONIX_MODE:       { printf("TODO: DECSET_ENTER_TEKTRONIX_MODE\n"); } break;       
+                case DECSET_132_MODE:                   { printf("TODO: DECSET_132_MODE\n"); } break;                   
+                case DECSET_MORE_FIX:                   { printf("TODO: DECSET_MORE_FIX\n"); } break;                   
+                case DECSET_ENB_NAT_REPLACE_CHSET:      { printf("TODO: DECSET_ENB_NAT_REPLACE_CHSET\n"); } break;      
+                case DECSET_ENB_GRAP_EXP_PRINT_MODE:    { printf("TODO: DECSET_ENB_GRAP_EXP_PRINT_MODE\n"); } break;    
+                case DECSET_TURN_ON_MARGIN_BELL:        { printf("TODO: DECSET_TURN_ON_MARGIN_BELL\n"); } break;        
+                // case DECSET_ENB_GRAP_PRINT_CLR_MODE:    { printf("TODO: DECSET_ENB_GRAP_PRINT_CLR_MODE\n"); } break;    
+                case DECSET_REVERSE_WRAP_MODE:          { printf("TODO: DECSET_REVERSE_WRAP_MODE\n"); } break;          
+                // case DECSET_ENB_GRAP_PRINT_CLR_SYNTAX:  { printf("TODO: DECSET_ENB_GRAP_PRINT_CLR_SYNTAX\n"); } break;  
+                case DECSET_START_LOGGING:              { printf("TODO: DECSET_START_LOGGING\n"); } break;              
+                // case DECSET_GRAP_PRINT_BG_MODE:         { printf("TODO: DECSET_GRAP_PRINT_BG_MODE\n"); } break;         
+                case DECSET_USE_ALTERNATE_SCREEN_BUF:   { printf("TODO: DECSET_USE_ALTERNATE_SCREEN_BUF\n"); } break;   
+                // case DECSET_ENB_GRAP_ROT_PRINT_MODE:    { printf("TODO: DECSET_ENB_GRAP_ROT_PRINT_MODE\n"); } break;    
+                case DECSET_APPLICATION_KEYPAD_MODE:    { printf("TODO: DECSET_APPLICATION_KEYPAD_MODE\n"); } break;    
+                case DECSET_BACKARROW_SENDS_BACKSPACE:  { printf("TODO: DECSET_BACKARROW_SENDS_BACKSPACE\n"); } break;  
+                case DECSET_LEFT_RIGHT_MARGIN_MODE:     { printf("TODO: DECSET_LEFT_RIGHT_MARGIN_MODE\n"); } break;     
+                case DECSET_ENB_SIXEL_DISPLAY_MODE:     { printf("TODO: DECSET_ENB_SIXEL_DISPLAY_MODE\n"); } break;     
+                case DECSET_NOTCLEAR_SCREEN_ON_DECCOLM: { printf("TODO: DECSET_NOTCLEAR_SCREEN_ON_DECCOLM\n"); } break; 
+                case DECSET_SEND_MOUXY_ON_BUTPRESSRELS: { printf("TODO: DECSET_SEND_MOUXY_ON_BUTPRESSRELS\n"); } break; 
+                case DECSET_HILITE_MOUSE_TRACKING:      { printf("TODO: DECSET_HILITE_MOUSE_TRACKING\n"); } break;      
+                case DECSET_CELL_MOTION_MOUSE_TRACKING: { printf("TODO: DECSET_CELL_MOTION_MOUSE_TRACKING\n"); } break; 
+                case DECSET_ALL_MOTION_MOUSE_TRACKING:  { printf("TODO: DECSET_ALL_MOTION_MOUSE_TRACKING\n"); } break;  
+                case DECSET_SEND_FOCUS_INOUT_EVENTS:    { printf("TODO: DECSET_SEND_FOCUS_INOUT_EVENTS\n"); } break;    
+                case DECSET_UTF8_MOUSE_MODE:            { printf("TODO: DECSET_UTF8_MOUSE_MODE\n"); } break;            
+                case DECSET_SGR_MOUSE_MODE:             { printf("TODO: DECSET_SGR_MOUSE_MODE\n"); } break;             
+                case DECSET_ALTERNATE_SCROLL_MODE:      { printf("TODO: DECSET_ALTERNATE_SCROLL_MODE\n"); } break;      
+                case DECSET_SCROLL_BOTTOM_TTY_OUTPUT:   { printf("TODO: DECSET_SCROLL_BOTTOM_TTY_OUTPUT\n"); } break;   
+                case DECSET_SCROLL_BOTTOM_ON_KEYPRESS:  { printf("TODO: DECSET_SCROLL_BOTTOM_ON_KEYPRESS\n"); } break;  
+                case DECSET_ENB_FASTSCROLL:             { printf("TODO: DECSET_ENB_FASTSCROLL\n"); } break;             
+                case DECSET_ENB_URXVT_MOUSE_MODE:       { printf("TODO: DECSET_ENB_URXVT_MOUSE_MODE\n"); } break;       
+                case DECSET_ENB_SGR_MOUSE_PIXELMODE:    { printf("TODO: DECSET_ENB_SGR_MOUSE_PIXELMODE\n"); } break;    
+                case DECSET_INTERPRET_META_KEY:         { printf("TODO: DECSET_INTERPRET_META_KEY\n"); } break;         
+                case DECSET_ENB_SPCMOD_ALT_NUMLOCK:     { printf("TODO: DECSET_ENB_SPCMOD_ALT_NUMLOCK\n"); } break;     
+                case DECSET_SEND_ESC_WHEN_META_MOD:     { printf("TODO: DECSET_SEND_ESC_WHEN_META_MOD\n"); } break;     
+                case DECSET_SEND_DEL_FROM_EDITKEYPAD:   { printf("TODO: DECSET_SEND_DEL_FROM_EDITKEYPAD\n"); } break;   
+                case DECSET_SEND_ESC_WHEN_ALT_MOD:      { printf("TODO: DECSET_SEND_ESC_WHEN_ALT_MOD\n"); } break;      
+                case DECSET_KEEP_SELEC_NOT_HIGLIG:      { printf("TODO: DECSET_KEEP_SELEC_NOT_HIGLIG\n"); } break;      
+                case DECSET_USE_CLIPBOARD_SELECTION:    { printf("TODO: DECSET_USE_CLIPBOARD_SELECTION\n"); } break;    
+                case DECSET_ENB_URGWIN_ON_CTRL_G:       { printf("TODO: DECSET_ENB_URGWIN_ON_CTRL_G\n"); } break;       
+                case DECSET_ENB_RAISEWIN_ON_CTRL_G:     { printf("TODO: DECSET_ENB_RAISEWIN_ON_CTRL_G\n"); } break;     
+                case DECSET_REUSE_MOST_RECENT_CLIPBRD:  { printf("TODO: DECSET_REUSE_MOST_RECENT_CLIPBRD\n"); } break;  
+                case DECSET_EXTENDED_REVERSE_WRAP_MODE: { printf("TODO: DECSET_EXTENDED_REVERSE_WRAP_MODE\n"); } break; 
+                case DECSET_ENB_SWAP_ALT_SCREEN_BUF:    { printf("TODO: DECSET_ENB_SWAP_ALT_SCREEN_BUF\n"); } break;    
+                case DECSET_USE_ALT_SCREEN_BUFFER:      { printf("TODO: DECSET_USE_ALT_SCREEN_BUFFER\n"); } break;      
+                case DECSET_SAVE_CURSOR:                { printf("TODO: DECSET_SAVE_CURSOR\n"); } break;                
+                case DECSET_SAVE_CURSOR_2:              { printf("TODO: DECSET_SAVE_CURSOR_2\n"); } break;              
+                case DECSET_TERMINFOCAP_FNKEY_MODE:     { printf("TODO: DECSET_TERMINFOCAP_FNKEY_MODE\n"); } break;     
+                case DECSET_SET_SUN_FUNCKEY_MODE:       { printf("TODO: DECSET_SET_SUN_FUNCKEY_MODE\n"); } break;       
+                case DECSET_SET_HP_FUNCKEY_MODE:        { printf("TODO: DECSET_SET_HP_FUNCKEY_MODE\n"); } break;        
+                case DECSET_SET_SCO_FUNCKEY_MODE:       { printf("TODO: DECSET_SET_SCO_FUNCKEY_MODE\n"); } break;       
+                case DECSET_SET_LEGACY_KEYBOARD_EMUL:   { printf("TODO: DECSET_SET_LEGACY_KEYBOARD_EMUL\n"); } break;   
+                case DECSET_SET_VT220_KEYBOARD_EMUL:    { printf("TODO: DECSET_SET_VT220_KEYBOARD_EMUL\n"); } break;    
+                case DECSET_SET_READLINE_MOUSEBUT_1:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_1\n"); } break;    
+                case DECSET_SET_READLINE_MOUSEBUT_2:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_2\n"); } break;    
+                case DECSET_SET_READLINE_MOUSEBUT_3:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_3\n"); } break;    
+                case DECSET_SET_BRACKETED_PASTE_MODE:   { printf("TODO: DECSET_PASTER_BRACKETED_MODE\n"); m->bracket_mode = b == 'h'; } break;   
+                case DECSET_ENB_READLINE_CHARQUOTE:     { printf("TODO: DECSET_ENB_READLINE_CHARQUOTE\n"); } break;     
+                case DECSET_ENB_READLINE_NEWLINE_PASTE: { printf("TODO: DECSET_ENB_READLINE_NEWLINE_PASTE\n"); } break; 
+                default: printf("UNKNOWN DECSET OP: %d\n", opt);
             }
 
             return;
@@ -566,16 +816,19 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
         }
 
         case DEC_KEYPAD_APPLICATION_MODE: {
+            printf("TODO: KEYPAD_APPLICATION_MODE\n");
             m->keypad_mode = KEYPAD_APPLICATION_MODE;
             return;
         }
 
         case DEC_KEYPAD_NORMAL_MODE: {
+            printf("TODO: KEYPAD_NORMAL_MODE\n");
             m->keypad_mode = KEYPAD_NORMAL_MODE;
             return;
         }
 
         case DEVICE_CONTROL_STRING: {
+            printf("TODO: DEVICE_CONTROL_STRING\n");
             while(sv_chop_left(bytes) != ESC && sv_first(bytes) != STRING_TERMINATOR);
             sv_chop_left(bytes);
             return;
@@ -587,167 +840,11 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
         }
 
         case STRING_TERMINATOR: {
-            printf("TODO: STRING_TERMINATOR\n");
+            printf("ERROR: ISOLATED STRING_TERMINATOR\n");
         }; break;
 
         case OPERATING_SYSTEM_COMMAND: {
-            b = sv_first(bytes);
-            if (!isdigit(b)) {
-                switch (b) {
-                    case STP_SET_ICON_TO_FILE: {
-                        printf("TODO: STP_SET_ICON_TO_FILE\n");
-					}; break;
-
-                    case STP_SET_WINDOW_TITLE: {
-                        printf("TODO: STP_SET_WINDOW_TITLE\n");
-					}; break;
-
-                    case STP_SET_ICON_LABEL: {
-                        printf("TODO: STP_SET_ICON_LABEL\n");
-					}; break;
-
-                    default: printf("INVALID OSC COMMAND: %c\n", b); return;
-                }
-            }
-
-            int argv[10];
-            int argc = 0;
-            minal_parse_ansi_args(m, bytes, &argc, argv);
-
-            if (argc == 0) {
-                printf("MISSING NUMERIC ARGUMENT FOR OSC COMMAND\n");
-                return;
-            }
-
-            switch (argv[0]) {
-                case SET_TEXT_PARAMETERS_1: {
-                    printf("TODO: SET_TEXT_PARAMETERS_1\n");
-				}; break;
-                case SET_TEXT_PARAMETERS_2: {
-                    printf("TODO: SET_TEXT_PARAMETERS_2\n");
-				}; break;
-                case STP_ICON_NAME_WINDOW_TITLE: {
-                    printf("TODO: STP_ICON_NAME_WINDOW_TITLE\n");
-				}; break;
-                case STP_ICON_NAME: {
-                    printf("TODO: STP_ICON_NAME\n");
-				}; break;
-                case STP_WINDOW_TITLE: {
-                    printf("TODO: STP_WINDOW_TITLE\n");
-				}; break;
-                case STP_X_PROPERTY: {
-                    printf("TODO: STP_X_PROPERTY\n");
-				}; break;
-                case STP_COLOR_NUMBER: {
-                    printf("TODO: STP_COLOR_NUMBER\n");
-				}; break;
-                case STP_SPECIAL_COLOR_NUMBER: {
-                    printf("TODO: STP_SPECIAL_COLOR_NUMBER\n");
-				}; break;
-                case STP_TOGGLE_SPECIAL_CLRNUM: {
-                    printf("TODO: STP_TOGGLE_SPECIAL_CLRNUM\n");
-				}; break;
-                case STP_VT100_FG_COLOR: {
-                    printf("TODO: STP_VT100_FG_COLOR\n");
-				}; break;
-                case STP_VT100_BG_COLOR: {
-                    printf("TODO: STP_VT100_BG_COLOR\n");
-				}; break;
-                case STP_TEXT_CURSOR_COLOR: {
-                    printf("TODO: STP_TEXT_CURSOR_COLOR\n");
-				}; break;
-                case STP_POINTER_FG_COLOR: {
-                    printf("TODO: STP_POINTER_FG_COLOR\n");
-				}; break;
-                case STP_POINTER_BG_COLOR: {
-                    printf("TODO: STP_POINTER_BG_COLOR\n");
-				}; break;
-                case STP_TEKTRONIX_FG_COLOR: {
-                    printf("TODO: STP_TEKTRONIX_FG_COLOR\n");
-				}; break;
-                case STP_TEKTRONIX_BG_COLOR: {
-                    printf("TODO: STP_TEKTRONIX_BG_COLOR\n");
-				}; break;
-                case STP_HIGHLIGHT_BG_COLOR: {
-                    printf("TODO: STP_HIGHLIGHT_BG_COLOR\n");
-				}; break;
-                case STP_TEKTRONIX_CURSOR_COLOR: {
-                    printf("TODO: STP_TEKTRONIX_CURSOR_COLOR\n");
-				}; break;
-                case STP_HIGHLIGHT_FG_COLOR: {
-                    printf("TODO: STP_HIGHLIGHT_FG_COLOR\n");
-				}; break;
-                case STP_POINTER_CURSOR_SHAPE: {
-                    printf("TODO: STP_POINTER_CURSOR_SHAPE\n");
-				}; break;
-                case STP_CHANGE_LOG_FILE: {
-                    printf("TODO: STP_CHANGE_LOG_FILE\n");
-				}; break;
-                case STP_SET_FONT: {
-                    printf("TODO: STP_SET_FONT\n");
-				}; break;
-                case STP_FOR_EMACS: {
-                    printf("TODO: STP_FOR_EMACS\n");
-				}; break;
-                case STP_MANIP_SELECTION_DATA: {
-                    printf("TODO: STP_MANIP_SELECTION_DATA\n");
-				}; break;
-                case STP_XTERM_QUERY_ALLOWED: {
-                    printf("TODO: STP_XTERM_QUERY_ALLOWED\n");
-				}; break;
-                case STP_XTERM_QUERY_DISALLOWED: {
-                    printf("TODO: STP_XTERM_QUERY_DISALLOWED\n");
-				}; break;
-                case STP_XTERM_QUERY_ALLOWABLE: {
-                    printf("TODO: STP_XTERM_QUERY_ALLOWABLE\n");
-				}; break;
-                case STP_RESET_COLOR: {
-                    printf("TODO: STP_RESET_COLOR\n");
-				}; break;
-                case STP_RESET_SPECIAL_COLOR: {
-                    printf("TODO: STP_RESET_SPECIAL_COLOR\n");
-				}; break;
-                case STP_TOGGLE_SPECIAL_COLOR: {
-                    printf("TODO: STP_TOGGLE_SPECIAL_COLOR\n");
-				}; break;
-                case STP_RESET_VT100_TXTFGCLR: {
-                    printf("TODO: STP_RESET_VT100_TXTFGCLR\n");
-				}; break;
-                case STP_RESET_VT100_TXTBGCLR: {
-                    printf("TODO: STP_RESET_VT100_TXTBGCLR\n");
-				}; break;
-                case STP_RESET_TEXT_CURSOR_COLOR: {
-                    printf("TODO: STP_RESET_TEXT_CURSOR_COLOR\n");
-				}; break;
-                case STP_RESET_POINTER_FG_COLOR: {
-                    printf("TODO: STP_RESET_POINTER_FG_COLOR\n");
-				}; break;
-                case STP_RESET_POINTER_BG_COLOR: {
-                    printf("TODO: STP_RESET_POINTER_BG_COLOR\n");
-				}; break;
-                case STP_RESET_TKTX_FG_COLOR: {
-                    printf("TODO: STP_RESET_TKTX_FG_COLOR\n");
-				}; break;
-                case STP_RESET_TKTX_BG_COLOR: {
-                    printf("TODO: STP_RESET_TKTX_BG_COLOR\n");
-				}; break;
-                case STP_RESET_HIGHLIGHT_COLOR: {
-                    printf("TODO: STP_RESET_HIGHLIGHT_COLOR\n");
-                }; break;
-                case STP_RESET_TKTX_CURSOR_COLOR: {
-                    printf("TODO: STP_RESET_TKTX_CURSOR_COLOR\n");
-                }; break;
-                case STP_RESET_HIGHLIGHT_FGCOLOR: {
-                    printf("TODO: STP_RESET_HIGHLIGHT_FGCOLOR\n");
-                }; break;
-                default: printf("INVALID ARGUMENT TO OSC COMMAND: %d\n", argv[0]); return;
-            }
-
-            // b = sv_chop_left(bytes);
-            // while (b != STRING_TERMINATOR) {
-            //     b = sv_chop_left(bytes);
-            //     printf("LOOKING FOR STRING TERMINATOR: %c\n", b);
-            // }
+            minal_parse_ansi_osc(m, bytes);
 		}; break;
 
         case PRIVACY_MESSAGE: {
@@ -812,9 +909,6 @@ void minal_new_line(Minal* m)
 {
     Line new_line = minal_line_alloc(m);
     vec_append(&m->lines, new_line);
-
-    LineStyle new_style = minal_linestyle_alloc(m);
-    vec_append(&m->styles, new_style);
 }
 
 void minal_pageup(Minal* m, size_t opt)
@@ -929,6 +1023,104 @@ SDL_Color minal_select_color(Minal* m, int op)
     }
 }
 
+void minal_apply_style(Minal* m, int op) 
+{
+    switch (op) {
+        case SGR_NORMAL: {
+            m->cursor.style = DEFAULT_STYLE;
+			return;
+		}; break;
+        case SGR_BOLD_WEIGHT: {
+            m->cursor.style.bold = true;
+            m->cursor.style.faint = false;
+			return;
+		}; break;
+        case SGR_FAINT_WEIGHT: {
+            m->cursor.style.bold = false;
+            m->cursor.style.faint = true;
+			return;
+		}; break;
+        case SGR_ITALIC: {
+            m->cursor.style.italic = true;
+			return;
+		}; break;
+        case SGR_UNDERLINE: {
+            m->cursor.style.underline = true;
+            m->cursor.style.doubleunder = false;
+			return;
+		}; break;
+        case SGR_BLINK: {
+            m->cursor.style.blink = true;
+            m->cursor.style.fastblink = false;
+			return;
+		}; break;
+        case SGR_FAST_BLINK: {
+            m->cursor.style.blink = false;
+            m->cursor.style.fastblink = true;
+			return;
+		}; break;
+        case SGR_INVERSE: {
+            if (!m->cursor.style.inverse) {
+                m->cursor.style.inverse = true;
+                SDL_Color tmp = m->cursor.style.fg_color;
+                m->cursor.style.fg_color = m->cursor.style.bg_color;
+                m->cursor.style.bg_color = tmp;
+            }
+			return;
+		}; break;
+        case SGR_INVISIBLE: {
+            m->cursor.style.hidden = true;
+			return;
+		}; break;
+        case SGR_CROSSED_OUT: {
+            m->cursor.style.crossout = true;
+			return;
+		}; break;
+        case SGR_DOUBLE_UNDERLINE: {
+            m->cursor.style.doubleunder = true;
+            m->cursor.style.underline = false;
+			return;
+		}; break;
+        case SGR_NORMAL_WEIGHT: {
+            m->cursor.style.bold = false;
+            m->cursor.style.faint = false;
+			return;
+		}; break;
+        case SGR_NOT_ITALIC: {
+            m->cursor.style.italic = false;
+			return;
+		}; break;
+        case SGR_NOT_UNDERLINE: {
+            m->cursor.style.underline = false;
+            m->cursor.style.doubleunder = false;
+			return;
+		}; break;
+        case SGR_NOT_BLINK: {
+            m->cursor.style.blink = false;
+            m->cursor.style.fastblink = false;
+			return;
+		}; break;
+        case SGR_NOT_INVERSE: {
+            if (m->cursor.style.inverse) {
+                m->cursor.style.inverse = false;
+                SDL_Color tmp = m->cursor.style.fg_color;
+                m->cursor.style.fg_color = m->cursor.style.bg_color;
+                m->cursor.style.bg_color = tmp;
+            }
+			return;
+		}; break;
+        case SGR_VISIBLE: {
+            m->cursor.style.hidden = false;
+			return;
+		}; break;
+        case SGR_NOT_CROSSED_OUT: {
+            m->cursor.style.crossout = false;
+			return;
+		}; break;
+    }
+}
+
+
 void minal_graphic_mode(Minal* m, int* argv, int argc)
 {
     if (argc == 0) {
@@ -938,18 +1130,29 @@ void minal_graphic_mode(Minal* m, int* argv, int argc)
     int i = 0; 
     while (i < argc) {
         SDL_Color clr;
-        bool isbg;
+        enum {
+            TARGET_FG,
+            TARGET_BG,
+            TARGET_UL,
+        } target = 0;
         int op = argv[i];
-        if ((0 <= op && op <= 9) ||
-           (21 <= op && op <= 29)) {
+        if ((SGR_NORMAL <= op && op <= SGR_CROSSED_OUT) ||
+           (SGR_DOUBLE_UNDERLINE <= op && op <= SGR_NOT_CROSSED_OUT)) {
+            minal_apply_style(m, op);
             i++;
             continue;
         }
 
-        if (op == 38 || op == 48) {
-            isbg = op == 48;
+        if (op == SGR_FG_EXTENDED_COLOR_PREFIX || 
+            op == SGR_BG_EXTENDED_COLOR_PREFIX
+        ) {
+            target = (
+                op == SGR_FG_EXTENDED_COLOR_PREFIX ? TARGET_FG : 
+                op == SGR_UL_EXTENDED_COLOR_PREFIX ? TARGET_UL :
+                TARGET_BG
+            );
             if (i + 1 >= argc) {
-                clr = isbg ? BASE_COLORS[DEFAULT_BG_COLOR] : BASE_COLORS[DEFAULT_FG_COLOR];
+                clr = target == TARGET_BG ? BASE_COLORS[DEFAULT_BG_COLOR] : BASE_COLORS[DEFAULT_FG_COLOR];
                 goto setcolor;
             };
             i++;
@@ -968,19 +1171,21 @@ void minal_graphic_mode(Minal* m, int* argv, int argc)
             }
         }
 
-        if ((30 <= op && op <= 49) ||
-            (90 <= op && op <= 107))
+        if ((SGR_FG_BLACK <= op        && op <= SGR_BG_DEFAULT) ||
+            (SGR_FG_BRIGHT_BLACK <= op && op <= SGR_BG_BRIGHT_WHITE))
         {
-            isbg =(40 <= op && op <= 49) || (100 <= op && op <= 107);
+            target = (SGR_BG_BLACK <= op && op <= SGR_BG_DEFAULT) || 
+                 (SGR_BG_BRIGHT_BLACK <= op && op <= SGR_BG_BRIGHT_WHITE) ?
+                TARGET_BG : TARGET_FG;
             clr = minal_select_color(m, op);
             goto setcolor;
         }
 
     setcolor:
-        if (isbg) {
-            m->cursor.style.bg_color = clr;
-        } else {
-            m->cursor.style.fg_color = clr;
+        switch (target) {
+            case TARGET_BG: m->cursor.style.bg_color = clr; break;
+            case TARGET_FG: m->cursor.style.fg_color = clr; break;
+            case TARGET_UL: m->cursor.style.ul_color = clr; break;
         }
         i++;
     }
@@ -992,65 +1197,12 @@ size_t minal_cursor2absol(Minal* m)
     return m->cursor.row + m->row_offset;
 }
 
-size_t line_col2idx(Line* l, size_t col)
-/////////////////////////////////////////////////////////////////////////////////
-//                                                                             //
-// col:  0  1   2            3  4   5      6  7   8         9                  //
-//     [ _, _, {_, _, _, _}, _, _, {_, _}, _, _, {_, _, _}, _ ]                //
-// idx:  0  1   2  3  4  5   6  7   8  9  10 11  12 13 14  15                  //
-//              ^                                                              //
-//           start = 2                                                         //
-//           start + size = start + 4 = 2 + 4 = 6                              //
-//           start + size - size = start                                       //
-// col = 2  => col2idx = 2                                                     //
-// col = 3  => col2idx = 6                                                     //
-// col = 5  => col2idx = 8                                                     //
-// col = 8  => col2idx = 12                                                    //
-// col = 10 => col2idx = 16                                                    //
-// col = 11 => col2idx = 17                                                    //
-// col = 15 => col2idx = 21                                                    //
-//                                                                             //
-/////////////////////////////////////////////////////////////////////////////////
-{
-    if (l->len == 0) return 0;
-
-    size_t i = 0;
-    size_t cols = 0;
-    while (cols < col) {
-        if (i >= l->len) {
-            i++;
-        } else {
-            i += utf8_chrlen(l->items[i]);
-        }
-        cols++;
-    }
-
-    return i;
-}
-
 Line minal_line_alloc(Minal* m)
 {
     Line l = {0};
     vec_expandto(&l, m->config.n_cols);
-    memset(l.items, 0, l.cap * sizeof(char));
+    memset(l.items, 0, l.cap * sizeof(*l.items));
     return l;
-}
-
-LineStyle minal_linestyle_alloc(Minal* m)
-{
-    LineStyle l = {0};
-    vec_expandto(&l, m->config.n_cols);
-    for (int j = 0; j < m->config.n_cols; ++j) {
-        vec_append(&l, DEFAULT_STYLE);
-    }
-    return l;
-}
-
-void line_grow(Line* l)
-{
-    vec_grow(l);
-    memset(l->items + l->len, 'B', (l->cap - l->len) * sizeof(*l->items));
-    return;
 }
 
 void line_print(Line* line)
@@ -1060,7 +1212,7 @@ void line_print(Line* line)
     printf("     len:   %zu,\n", line->len);
     printf("     items: [ \n");
     for (size_t j = 0; j < line->len; ++j) {
-        uint8_t it = line->items[j];
+        uint8_t it = line->items[j].content;
         printf("        - %08b (%c)\n", it, it);
     }
     printf("   ]}\n");
@@ -1096,73 +1248,34 @@ size_t screen_getline(StringView l, size_t index)
 }
 
 
-uint8_t minal_at(Minal *m, size_t col, size_t row)
+Cell minal_at(Minal *m, size_t col, size_t row)
 {
     assert(row >= 0 && row < m->lines.len);
-
-    size_t idx = line_col2idx(&m->lines.items[row], col);
-    assert(idx >= 0 && idx < m->lines.items[row].len);
-
-    return m->lines.items[row].items[idx];
+    assert(col >= 0 && col < m->lines.items[row].len);
+    return m->lines.items[row].items[col];
 }
 
-void minal_append(Minal* m, size_t row, char c)
+void minal_append(Minal* m, size_t row, Cell c)
 {
     assert(row >= 0 && row < m->lines.len);
     Line r = m->lines.items[row];
-    vec_append(&m->lines.items[row], (uint8_t)c);
+    vec_append(&m->lines.items[row], c);
 }
 
-void minal_insert_at(Minal* m, size_t col, size_t row, uint8_t* c)
+void minal_insert_at(Minal* m, size_t col, size_t row, Cell c)
 {
     assert(row >= 0 && row < m->lines.len);
-    m->styles.items[row].items[col] = m->cursor.style;
     Line* l = &m->lines.items[row];
-    size_t idx  = line_col2idx(l, col);
-    size_t new_size = utf8_chrlen(*c);
-
-    if (idx >= l->len) {
-        int n = idx - l->len;
+    if (col >= l->len) {
+        int n = col - l->len;
+        Cell emptycell = {0};
         for (int i = 0; i < n; ++i) {
-            minal_append(m, row, ' ');
+            minal_append(m, row, emptycell);
         }
-        for (size_t i = 0; i < new_size; ++i) {
-            minal_append(m, row, *(c + i));
-        }
+        minal_append(m, row, c);
         return;
     }
-
-    uint8_t head = l->items[idx];
-    size_t tail  = line_col2idx(l, col + 1);
-    size_t old_size = utf8_chrlen(head);
-    int diff = (new_size - old_size);
-
-    if (diff != 0) {
-        if (l->len + diff >= l->cap) {
-            line_grow(l);
-        }
-
-        if (l->len > tail) {
-            size_t n = sizeof(uint8_t) * (l->len - tail);
-            void* src = &l->items[tail];
-            void* dst = &l->items[tail + diff];
-            memmove(dst, src, n);
-
-            int absdiff = abs(diff);
-            size_t udiff = (size_t)absdiff;
-            if (diff < 0) {
-                l->len -= udiff;
-            } else {
-                l->len += udiff;
-            }
-        }
-    }
-
-    for (size_t i = 0; i < new_size; ++i) {
-        uint8_t byte = *(c + i);
-        l->items[idx + i] = byte;
-    }
-
+    l->items[col] = c;
 }
 
 void minal_erase_in_line(Minal* m, size_t opt)
@@ -1193,54 +1306,22 @@ void minal_erase_in_line(Minal* m, size_t opt)
 
     size_t start;
     size_t end;
-
-    size_t start_col;
-    size_t end_col;
-
-    StringView sc = sv_from_sb(m->screen);
-    size_t idx = screen_getline(sc, m->cursor.row);
-    StringView lines_view = {
-        .data = m->screen.data + idx,
-        .len  = sc.len - idx,
-    };
-    StringView line_view = sv_chop_line(&lines_view);
-    size_t start_sc;
-    size_t end_sc;
-
     switch (opt) {
 
         case ERASE_IN_LINE_LEFT: {
             start = 0;
-            end   = line_col2idx(&m->lines.items[y], x);
-
-            start_col = 0;
-            end_col   = x;
-
-            start_sc = 0;
-            end_sc   = screen_col2idx(&line_view, x);
+            end   = x;
         }; break;
 
         case ERASE_IN_LINE_ALL: {
             start = 0;
             end   = line->len - 1;
-
-            start_col = 0;
-            end_col   = m->config.n_cols;
-
-            start_sc = 0;
-            end_sc   = line_view.len - 1;
         }; break;
 
         case ERASE_IN_LINE_RIGHT:
         default: {
-            start = line_col2idx(&m->lines.items[y], x);
+            start = x;
             end   = line->len - 1;
-
-            start_col = x;
-            end_col   = m->config.n_cols;
-
-            start_sc = screen_col2idx(&line_view, x);
-            end_sc   = line_view.len - 1;
         }; break;
     }
 
@@ -1250,24 +1331,8 @@ void minal_erase_in_line(Minal* m, size_t opt)
         end = tmp;
     }
 
-    if (start_col > end_col) {
-        size_t tmp = start_col;
-        start_col = end_col;
-        end_col = tmp;
-    }
-
-    if (start_sc > end_sc) {
-        size_t tmp = start_sc;
-        start_sc = end_col;
-        end_sc = tmp;
-    }
-
-
-    for (size_t col = start_col; col < end_col; col++) {
-        m->styles.items[y].items[col] = m->cursor.style;
-    }
-
-    memset(line->items + start, ' ', end - start + 1);
+    // TODO: apply current style to all lines
+    memset(line->items + start, 0, (end - start + 1) * sizeof(*line->items));
     if (line->len > end - start + 1) {
         line->len -= end - start + 1;
     } else {
@@ -1288,8 +1353,9 @@ void minal_erase_in_display(Minal* m, size_t opt)
     if (opt == ERASE_IN_DISPLAY_SAVED) {
         m->row_offset = 0;
 
+        // TODO: apply current style to all lines
         for (int i = 0; i < m->lines.len; ++i) {
-            memset(m->lines.items[i].items, ' ', m->lines.items[i].len);
+            memset(m->lines.items[i].items, 0, m->lines.items[i].len);
             m->lines.items[i].len = 0;
         }
 
@@ -1366,12 +1432,29 @@ void minal_receiver(Minal* m)
         .len  = offset,
     };
 
+#ifdef DEBUG
+    FILE* f = fopen("dump.txt", "a");
+    char out[10];
+    for (size_t i = 0; i < view.len; ++i) {
+        char ch = *(view.data + i);
+        int n;
+        if (ch == '\n') {
+            n = sprintf(out, "\n");
+        } else if (isprint(ch)) {
+            n = sprintf(out, "%c ", ch);
+        } else {
+            n = sprintf(out, "%02X ", ch);
+        }
+        fwrite(out, 1, n, f);
+    }
+    fclose(f);
+#endif
+
     while (view.len > 0) {
         uint8_t ch = (uint8_t)sv_chop_left(&view);
 
         size_t x   = m->cursor.col;
         size_t y   = minal_cursor2absol(m);
-        size_t idx = line_col2idx(&m->lines.items[y], x);
 
         if (ch == '\0') {
             continue;
@@ -1400,53 +1483,72 @@ void minal_receiver(Minal* m)
                 continue;
             }
 
-            if (x > 0) {
+            if (!m->autowrap) {
                 minal_cursor_move(m, x - 1, m->cursor.row);
             } else {
-                size_t last_col = m->config.n_cols - 1;
-                minal_cursor_move(m, last_col, m->cursor.row - 1);
+                if (x > 0) {
+                    minal_cursor_move(m, x - 1, m->cursor.row);
+                } else {
+                    size_t last_col = m->config.n_cols - 1;
+                    minal_cursor_move(m, last_col, m->cursor.row - 1);
+                }
             }
 
             continue;
         }
 
         if (ch == ESC) {
+#ifdef DEBUG
+            printf("ESC ");
+            StringView before = view;
+#endif
             minal_parse_ansi(m, &view);
+
+#ifdef DEBUG
+            StringView after = view;
+            size_t n = before.len - after.len;
+            for (size_t i = 0; i < n; ++i) {
+                uint8_t ch = before.data[i];
+                if (isprint(ch)) {
+                    printf("%c ", ch);
+                } else {
+                    printf("%02X ", ch);
+                }
+            }
+            printf("\n");
+#endif
             continue;
         }
 
-        if (is_utf8_head(ch)) {
-            size_t utf8len = utf8_chrlen(ch);
-            assert(utf8len < 5);
-            size_t  utf8cur = 0;
-            uint8_t utf8code[5];
-
-            for (;;) {
-                assert(utf8cur == 0 || (ch >> 6) == 0b10);
-                utf8code[utf8cur++] = ch;
-                if (utf8cur >= utf8len) {
-                    break;
-                }
-                ch = (uint8_t)sv_chop_left(&view);
+        // ch = (uint8_t)sv_chop_left(&view);
+        int err;
+        uint32_t content;
+        int n = c_utf8_buf_to_utf32_char_b(&content, view.data, &err);
+        view.data += n;
+        view.len  -= n;
+        if (err) {
+            printf("Failed to convert UTF-8=>UTF-32: %u (n = %d)\n", content, n);
+            for (int i = n - 1; i >= 0; --i) {
+                printf("%02X ", *(uint8_t*)(view.data - i));
             }
-            utf8code[4] = '\0';
+            printf("\n");
+        }
 
-            minal_insert_at(m, x, y, (uint8_t*)utf8code);
+        Cell cell = (Cell) {
+            .content = content,
+            .style = m->cursor.style,
+        };
+
+        minal_insert_at(m, x, y, cell);
+        if (!m->autowrap) {
+            minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
+        } else {
             if (m->cursor.col == m->config.n_cols - 1) {
                 minal_carriageret(m);
                 minal_linefeed(m);
             } else {
                 minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
             }
-            continue;
-        }
-
-        minal_insert_at(m, x, y, &ch);
-        if (m->cursor.col == m->config.n_cols - 1) {
-            minal_carriageret(m);
-            minal_linefeed(m);
-        } else {
-            minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
         }
     }
 }
@@ -1693,6 +1795,12 @@ void minal_transmitter(Minal* m, SDL_Event* event)
     }
 }
 
+float blink_ratio(uint64_t secs, float freq) {
+    float angle = freq * secs;
+    float sine = sinf(angle);
+    return  0.5 + 0.5 * ((sine + 1.0f) / 2.0f);
+}
+
 void minal_render_text(Minal* m)
 {
     float x = 0;
@@ -1730,20 +1838,54 @@ void minal_render_text(Minal* m)
         row_start = m->row_offset + m->reg_top;
     }
 
+#ifdef DUMP_BUFFER
+    FILE* f = fopen("buffer.txt", "a");
+#endif
+
     for (size_t row = row_start; row <= m->row_offset + m->reg_bot; row++) {
         Line l = m->lines.items[row];
-        sb_nconcat(&m->screen, (char*)l.items, l.len);
+        char utf8buf[5];
+        for (size_t col = 0; col < l.len; ++col) {
+            int len = c_utf32_char_to_utf8_buf(utf8buf, utf8buf + 5, l.items[col].content);
+            sb_nconcat(&m->screen, utf8buf, len);
+        }
         sb_append(&m->screen, '\n');
+
+#ifdef DUMP_BUFFER
+
+        for (size_t i = 0; i < l.len; ++i) {
+            uint32_t ch = l.items[i].content;
+            // c_utf32_char_to_utf8_buf(char* out_utf8_buf, const char* utf8_buf_end, const uint32_t char32);
+            char out[10];
+            int n;
+            n = sprintf(out, "%lc ", ch);
+            // if (isprint(ch)) {
+            // } else {
+            //     n = sprintf(out, "%02X ", ch);
+            // }
+            fwrite(out, 1, n, f);
+        }
+        fwrite("\n", 1, 1, f);
+#endif
     }
+
+#ifdef DUMP_BUFFER
+    fclose(f);
+#endif
+
+    uint8_t tick_secs = SDL_GetTicks() / 1000;
+    float blink = blink_ratio(tick_secs, 10.0);
+    float fastblink = blink_ratio(tick_secs, 20.0);
 
     TTF_SetTextString(m->text, "", 0);
     screen = sv_from_sb(m->screen);
+
     size_t row = 0;
     while (screen.len > 0 && row <= m->reg_bot) {
         StringView l = sv_chop_line(&screen);
         x = 0;
         for (size_t col = 0; col < m->config.n_cols; ++col) {
-            Style style = m->styles.items[m->row_offset + row].items[col];
+            Style style = m->lines.items[m->row_offset + row].items[col].style;
             SDL_FRect bg = {
                 .x = x,
                 .y = y,
@@ -1751,7 +1893,8 @@ void minal_render_text(Minal* m)
                 .h = m->config.cell_height,
             };
             SDL_SetRenderDrawColor(m->rend, style.bg_color.r, style.bg_color.g, style.bg_color.b, style.bg_color.a);
-            SDL_RenderFillRect(m->rend, &bg);
+            if (col != m->cursor.col && row != m->cursor.row) 
+                SDL_RenderFillRect(m->rend, &bg);
 
             if (l.len == 0) {
                 x += m->config.cell_width;
@@ -1764,8 +1907,40 @@ void minal_render_text(Minal* m)
             l.data += len;
             l.len  -= len;
 
-            TTF_SetTextColor(m->text, style.fg_color.r, style.fg_color.g, style.fg_color.b, style.fg_color.a);
+            SDL_Color fg;
+            if (col == m->cursor.col && row == m->cursor.row) {
+                fg = style.bg_color;
+            } else {
+                fg = style.fg_color;
+            }
+
+            if (style.faint) {
+                fg.a /= 2;
+            }
+
+            if (style.hidden) {
+                fg.a = 0;
+            } else if (style.blink) {
+                fg.a *= blink;
+            } else if (style.fastblink) {
+                fg.a *= fastblink;
+            }
+
+            TTF_SetTextColor(m->text, fg.r, fg.g, fg.b, fg.a);
             TTF_DrawRendererText(m->text, x, y);
+
+
+            if (style.underline) {
+                style.ul_color.a = fg.a;
+                TTF_SetTextColor(m->text, style.ul_color.r, style.ul_color.g, style.ul_color.b, style.ul_color.a);
+                TTF_SetTextString(m->text, "_", 1);
+                TTF_DrawRendererText(m->text, x, y);
+            } else if (style.doubleunder) {
+                style.ul_color.a = fg.a;
+                TTF_SetTextColor(m->text, style.ul_color.r, style.ul_color.g, style.ul_color.b, style.ul_color.a);
+                TTF_SetTextString(m->text, "\xE2\x80\x97", 1);
+                TTF_DrawRendererText(m->text, x, y);
+            }
 
             x += m->config.cell_width;
         }
@@ -1778,9 +1953,15 @@ void minal_render_text(Minal* m)
     }
 }
 
+void minal_render_cursor(Minal* m)
+{
+    SDL_SetRenderDrawColor(m->rend, m->cursor.style.fg_color.r, m->cursor.style.fg_color.g, m->cursor.style.fg_color.b, m->cursor.style.fg_color.a);
+    SDL_FRect cur = minal_cursor_to_rect(m);
+    SDL_RenderFillRect(m->rend, &cur);
+}
+
 void minal_run(Minal* m)
 {
-    assert(SDL_StartTextInput(m->window));
     while (m->run) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -1789,16 +1970,33 @@ void minal_run(Minal* m)
 
         SDL_SetRenderDrawColor(m->rend, DEFAULT_STYLE.bg_color.r, DEFAULT_STYLE.bg_color.g, DEFAULT_STYLE.bg_color.b, DEFAULT_STYLE.bg_color.a);
         SDL_RenderClear(m->rend);
-
-        minal_receiver(m);
-        minal_render_text(m);
-
-        SDL_SetRenderDrawColor(m->rend, m->cursor.style.fg_color.r, m->cursor.style.fg_color.g, m->cursor.style.fg_color.b, m->cursor.style.fg_color.a);
-        SDL_FRect cur = minal_cursor_to_rect(m);
-        SDL_RenderFillRect(m->rend, &cur);
-
+        if (true) {
+            minal_receiver(m);
+            minal_render_cursor(m);
+            minal_render_text(m);
+        } else if (false) {
+            SDL_Surface* surf = TTF_RenderGlyph_Solid(m->config.font, 0x00002717, BASE_COLORS[WHITE]);                                                              // Render a single 32-bit glyph at fast quality to a new 8-bit surface.
+            // SDL_Surface* surf = TTF_RenderGlyph_Solid(m->config.font, 0x00007533, BASE_COLORS[WHITE]);                                                              // Render a single 32-bit glyph at fast quality to a new 8-bit surface.
+            if (surf == NULL) {
+                printf("Failed to render glyph: %s\n", SDL_GetError());
+                exit(1);
+            }
+            SDL_Texture* tex = SDL_CreateTextureFromSurface(m->rend, surf);
+            if (tex == NULL) {
+                printf("ERROR: could not create texture: %s\n", SDL_GetError());
+                exit(2);
+            }
+            bool suc = SDL_RenderTexture(m->rend, tex, NULL, NULL);
+            if (!suc) {
+                printf("ERROR: failed to render texture: %s\n", SDL_GetError());
+                exit(3);
+            }
+            SDL_DestroyTexture(tex);
+        } else if (true) {
+            TTF_SetTextString(m->text, "\xE2\x9C\x97", 3);
+            TTF_DrawRendererText(m->text, 10, 10);
+        }
         SDL_RenderPresent(m->rend);
-
         SDL_Delay(1000 / FPS);
 
         minal_check_shell(m);
@@ -1811,11 +2009,6 @@ void minal_finish(Minal *m)
         vec_free(&m->lines.items[i]);
     }
     vec_free(&m->lines);
-
-    for (size_t i = 0; i < m->styles.len; ++i) {
-        vec_free(&m->styles.items[i]);
-    }
-    vec_free(&m->styles);
 
     sb_free(&m->screen);
 
@@ -1837,12 +2030,40 @@ void minal_finish(Minal *m)
     close(m->slave_fd);
 }
 
-
+void find_full_feature_fonts(Minal m)
+{
+    // NOTE: all the memory leaks back home
+    // uint32_t ch = 0x0000279C; // ➜
+    uint32_t ch = 0x00002717;    // ✗
+    m.config.font = TTF_OpenFont(FONT_FILE, m.config.font_size);
+    StringBuilder fonts = sb_from_file("fonts.txt");
+    StringView buf = sv_from_sb(fonts);
+    while (buf.len > 0) {
+        StringView filepath = sv_chop_line(&buf);
+        m.config.font = TTF_OpenFont(sv_to_cstr(filepath), m.config.font_size);
+        if (TTF_FontHasGlyph(m.config.font, ch)) {
+            printf("%.*s\n", (int)filepath.len, filepath.data);
+        }
+    }
+    return;
+}
 int main(void)
 {
-
-
     Minal m = minal_init();
+    // TTF_FontHasGlyph(m.config.font, "➜");
+    // printf("Has %c? %s\n", 0x00000061, TTF_FontHasGlyph(m.config.font, 0x00000061) ? "true": "false") ;
+    // uint32_t s;
+    // s = TTF_GetFontScript(m.config.font);
+    // printf("Font Script Before: %.*s\n", 4, (char*)&s);
+
+    // s = TTF_GetGlyphScript(0x0000279C);
+    // printf("Glyph Script: %.*s\n", 4, (char*)&s);
+
+    // assert(TTF_SetFontScript(m.config.font, s));
+    // s = TTF_GetFontScript(m.config.font);
+    // printf("Font Script After: %.*s\n", 4, (char*)&s);
+    // find_full_feature_fonts(m);
+    // return 0;
     minal_run(&m);
     minal_finish(&m);
     return 0;

@@ -17,6 +17,8 @@
     - [stty(1)](https://man7.org/linux/man-pages/man1/stty.1.html)
     - [posix_openpt(3)](https://pubs.opengroup.org/onlinepubs/9799919799/functions/posix_openpt.html)
     - [readline(3)](https://man7.org/linux/man-pages/man3/readline.3.html)
+    - [console_codes(4)](https://man7.org/linux/man-pages/man4/console_codes.4.html)
+    - [infocmp(1)](https://linux.die.net/man/1/infocmp)
 
 - General Explanations:
     - [The TTY Layer (Talk by Greg Kroah-Hartman)](https://www.youtube.com/watch?v=g4sZUBS57OQ)
@@ -38,3 +40,5 @@
     - [xterm - ctlseqs](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html)
     - [xterm - ctlseqs](https://www.xfree86.org/current/ctlseqs.html)
     - [wezterm - escape sequences](https://wezterm.org/escape-sequences.html#c0-control-codes)
+    - [tmux - ansi standards](https://github.com/tmux/tmux/blob/882fb4d295deb3e4b803eb444915763305114e4f/tools/ansicode.txt)
+    - [Math Utah - Screen](https://www.math.utah.edu/docs/info/screen_10.html#SEC51)

@@ -1,3 +1,21 @@
+%{%}  
+git:(    
+%{%}
+main
+%{%}
+) 
+%{%}
+%1{
+✗
+%}%{%} 
+
+
+bytes = [0xE2, 0x9E, 0x9C, 0x20, 0x20, 0x6D, 0x69, 0x6E, 0x61, 0x6C, 0x20, 0x67, 0x69, 0x74, 0x3A, 0x28, 0x6D, 0x61, 0x69, 0x6E, 0x29, 0x20, 0xE2, 0x9C]]
+
+E2 9E 9C 20 20 6D 69 6E 61 6C 20 67 69 74 3A 28 6D 61 69 6E 29 20 E2 9C 
+[  ->  ]        m  i  n  a  l                 (  m  a  i  n  )    [ X ]
+
+
 // Color + Parse String Argument
 ESC OSC 10 <t> ST // STP_VT100_FG_COLOR               (Change VT100 text foreground color to Pt. 
 // Some information 

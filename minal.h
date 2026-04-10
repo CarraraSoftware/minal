@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <math.h>
 #include <pty.h>
 #include <signal.h>
 #include <stdbool.h>
@@ -25,6 +26,11 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
+#define DEBUG true
+#define DUMP_BUFFER true
+
+#include "convert.h"
+
 #define _32K 32678
 #define CARR_SB_INIT_CAP _32K
 #define CARR_SV_IMPLEMENTATION
@@ -33,14 +39,55 @@
 #include "ansi.h"
 
 // #define FONT_FILE           "resources/font.ttf"
-#define FONT_FILE              "resources/SourceCodePro/SauceCodeProNerdFont-Regular.ttf"
-#define FONT_FILE1             "/usr/share/fonts/truetype/noto/NotoSansSymbols-Regular.ttf"
-#define FONT_FILE2             "/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf"
+#define FONT_FILE              "resources/font.ttf"
+#define FALLBACK_1             "/usr/share/fonts/TTF/Hack-Bold.ttf"
+#define FALLBACK_2             "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+#define FALLBACK_3             "/usr/share/fonts/gnu-free/FreeSerif.otf"
+
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+// #define FONT_FILE           "resources/SourceCodePro/SauceCodeProNerdFont-Regular.ttf"
 // #define FONT_FILE           "resources/CodeNewRoman/CodeNewRomanNerdFontMono-Regular.otf"
 // #define FONT_FILE           "resources/Monoid/MonoidNerdFont-Regular.ttf"
 // #define FONT_FILE           "resources/SpaceMono/SpaceMonoNerdFont-Regular.ttf"
 // #define FONT_FILE           "resources/gnu-free/FreeMono.otf"
 // #define FONT_FILE           "resources/Adwaita/AdwaitaMono-Regular.ttf"
+// #define FONT_FILE           "resources/NotoSansMono/NotoSansMono-Regular.ttf"
+// #define FONT_FILE           "resources/CascadiaCode/CaskaydiaCoveNerdFontMono-Regular.ttf"
+// #define FONT_FILE           "resources/0xProto/0xProtoNerdFont-Regular.ttf"
+// #define FONT_FILE           "resources/0xProto/0xProtoNerdFontPropo-Regular.ttf"
+// #define FONT_FILE           "resources/CODE2000.ttf"
+// #define FONT_FILE           "resources/FiraMono/FiraMonoNerdFont-Regular.otf"
+// #define FONT_FILE           "resources/FiraCode/FiraCodeNerdFontPropo-Regular.ttf"
+// #define FONT_FILE           "resources/FiraCode/FiraCodeNerdFont-Regular.ttf"
+// #define FONT_FILE           "resources/NotoSansSymbols2/NotoSansSymbols2-Regular.ttf"
+// #define FONT_FILE           "resources/Unifont/unifont-17.0.04.otf"
+// contains // ➜  
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansCondensed.ttf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSans-BoldOblique.ttf"
+// #define FONT_FILE           "/usr/share/fonts/gnu-free/FreeSerif.otf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+// contains  // ✗
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaMono-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansCondensed.ttf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSans-BoldOblique.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/gnu-free/FreeSerif.otf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaMono-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/Adwaita/AdwaitaSans-Italic.ttf"
+// #define FONT_FILE           "/usr/share/fonts/TTF/DejaVuSansCondensed.ttf"
+#define FONT_FILE_2         "/usr/share/fonts/TTF/Hack-Bold.ttf"
+#define FONT_FILE_3         "resources/FiraMono/FiraMonoNerdFont-Regular.otf"
+#define FONT_FILE_4         "/usr/share/fonts/TTF/DejaVuSansMono.ttf"
+#define FONT_FILE_5         "/usr/share/fonts/gnu-free/FreeSerif.otf"
+#define FONT_FILE_6         "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
+
 #define DEFAULT_FONT_SIZE   18.0f
 #define DEFAULT_DISPLAY_DPI 96
 #define DEFAULT_N_COLS      80
@@ -64,29 +111,20 @@ typedef struct {
 
 
 typedef struct {
-    bool      bold:      1;
-    bool      faint:     1;
-    bool      italic:    1;
-    bool      underline: 1;
-    bool      blinking:  1;
-    bool      inverse:   1;
-    bool      hidden:    1;
-    bool      strike:    1;
+    bool      bold:        1;
+    bool      faint:       1;
+    bool      italic:      1;
+    bool      underline:   1;
+    bool      blink    :   1;
+    bool      fastblink:   1;
+    bool      inverse:     1;
+    bool      hidden:      1;
+    bool      crossout:    1;
+    bool      doubleunder: 1;
     SDL_Color fg_color;
     SDL_Color bg_color;
+    SDL_Color ul_color;
 } Style;
-
-typedef struct {
-    Style* items;
-    size_t len;
-    size_t cap;
-} LineStyle;
-
-typedef struct {
-    LineStyle* items;
-    size_t     len;
-    size_t     cap;
-} Styles;
 
 typedef struct {
     Style  style;
@@ -95,7 +133,12 @@ typedef struct {
 } Cursor;
 
 typedef struct {
-    uint8_t* items;
+    Style    style;
+    uint32_t content;
+} Cell;
+
+typedef struct {
+    Cell* items;
     size_t   len;
     size_t   cap;
 } Line;
@@ -113,7 +156,6 @@ typedef enum {
 
 typedef struct {
     Lines           lines;
-    Styles          styles;
     StringBuilder   screen;
     Cursor          cursor;
     Cursor          saved_cursor;
@@ -139,6 +181,7 @@ typedef struct {
     int             master_fd;
 
     bool            bracket_mode;
+    bool            autowrap;
     KeypadMode      keypad_mode;
 } Minal;
 
@@ -178,16 +221,13 @@ void        minal_receiver(Minal* m);
 void        minal_render_text(Minal* m);
 
 // read/write
-uint8_t     minal_at(Minal *m, size_t col, size_t row);
-void        minal_insert_at(Minal* m, size_t col, size_t row, uint8_t* c);
-void        minal_append(Minal* m, size_t row, char c);
+Cell        minal_at(Minal *m, size_t col, size_t row);
+void        minal_insert_at(Minal* m, size_t col, size_t row, Cell c);
+void        minal_append(Minal* m, size_t row, Cell c);
 
 // line
 void        minal_new_line(Minal *m);
 Line        minal_line_alloc(Minal* m);
-LineStyle   minal_linestyle_alloc(Minal* m);
-void        line_grow(Line* l);
-size_t      line_col2idx(Line* l, size_t col);
 void        line_print(Line* l);
 
 // screen
@@ -249,16 +289,19 @@ const SDL_Color BASE_COLORS[] = {
 
 
 const Style DEFAULT_STYLE = {
-    .bold      = false,
-    .faint     = false,
-    .italic    = false,
-    .underline = false,
-    .blinking  = false,
-    .inverse   = false,
-    .hidden    = false,
-    .strike    = false,
-    .fg_color  = BASE_COLORS[DEFAULT_FG_COLOR],
-    .bg_color  = BASE_COLORS[DEFAULT_BG_COLOR],
+    .bold        = false,
+    .faint       = false,
+    .italic      = false,
+    .underline   = false,
+    .blink       = false,
+    .fastblink   = false,
+    .inverse     = false,
+    .hidden      = false,
+    .crossout    = false,
+    .doubleunder = false,
+    .fg_color    = BASE_COLORS[DEFAULT_FG_COLOR],
+    .bg_color    = BASE_COLORS[DEFAULT_BG_COLOR],
+    .ul_color    = BASE_COLORS[DEFAULT_FG_COLOR],
 };
 
 

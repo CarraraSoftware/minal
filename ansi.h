@@ -97,6 +97,7 @@ SOFTWARE.
 #define OPERATING_SYSTEM_COMMAND    ']'    // (OSC   is 0x9d)
 #define PRIVACY_MESSAGE             '^'    // (PM    is 0x9e) 
 #define APPLICATION_PROGRAM_COMMAND '_'    // (APC   is 0x9f)
+#define ST STRING_TERMINATOR // just for convenience
 
 /*-----------------------------------------------------------------------------/
 /                        Commands Starting With ESC                            /
@@ -199,6 +200,7 @@ SOFTWARE.
 #define DEC_KEYPAD_NORMAL_MODE	    '>'    //    ESC >                                    | Normal Keypad (DECKPNM), VT100.                     
 #define CURSOR_BOT_LEFT             'F'    //    ESC F                                    | Cursor to lower left corner of screen.              
 #define FULL_RESET	                'c'    //    ESC c                                    | Full Reset (RIS), VT100.                            
+#define NAPLPS_LOCK_SHIFT           'k'    //    ESC k                                    | NAPLPS lock-shift G1 to GR 
 #define MEMORY_LOCK                 'l'    //    ESC l                                    | Memory Lock (per HP terminals).                     
 #define MEMORY_UNLOCK               'm'    //    ESC m                                    | Memory Unlock (per HP terminals).                   
 #define INVOKE_G2_CHARSET_GL        'n'    //    ESC n                                    | Invoke the G2 Character Set as GL (LS2).            
@@ -390,6 +392,7 @@ SOFTWARE.
 #define SGR_ITALIC                    3     //   ESC CSI 0003 m                           | Italicized, ECMA-48 2nd.
 #define SGR_UNDERLINE                 4     //   ESC CSI 0004 m                           | Underlined, VT100.
 #define SGR_BLINK                     5     //   ESC CSI 0005 m                           | Blink, VT100.
+#define SGR_FAST_BLINK                6     //   ESC CSI 0006 m                           | Fast Blink.
 #define SGR_INVERSE                   7     //   ESC CSI 0007 m                           | Inverse, VT100.
 #define SGR_INVISIBLE                 8     //   ESC CSI 0008 m                           | Invisible, i.e., hidden, ECMA-48 2nd, VT300.
 #define SGR_CROSSED_OUT               9     //   ESC CSI 0009 m                           | Crossed-out characters, ECMA-48 3rd.
@@ -419,6 +422,7 @@ SOFTWARE.
 #define SGR_BG_CYAN 	              46    //   ESC CSI 0046 m                           | Set background color to Cyan.                
 #define SGR_BG_WHITE 	              47    //   ESC CSI 0047 m                           | Set background color to White.               
 #define SGR_BG_DEFAULT                49    //   ESC CSI 0049 m                           | Set background color to default, ECMA-48 3rd.
+#define SGR_UL_DEFAULT                59    //   ESC CSI 0059 m                           | Set underline color to default. Not in standard; implemented in Kitty, VTE, mintty, and iTerm2.
 #define SGR_FG_BRIGHT_BLACK           90    //   ESC CSI 0090 m                           | Set foreground color to Bright Black;   
 #define SGR_FG_BRIGHT_RED 	          91    //   ESC CSI 0091 m                           | Set foreground color to Bright Red.     
 #define SGR_FG_BRIGHT_GREEN           92    //   ESC CSI 0092 m                           | Set foreground color to Bright Green.   
@@ -453,6 +457,12 @@ SOFTWARE.
 #define SGR_BG_EXTCLR_INDEX             5   //   ESC CSI 48 : 5 : <i>                   m | Set background color to <n>, using indexed color.                             
 #define SGR_BG_EXTCLR_RGB_2             2   //   ESC CSI 48 ; 2 ; <r> ; <g> ; <b>       m | Set background color using RGB values.                                       
 //    }  SGR_BG
+//    {
+#define SGR_UL_EXTENDED_COLOR_PREFIX   58   //   --                                       | Prefix for setting the underline color with the 256 extended color pallete. 
+#define SGR_UL_EXTCLR_RGB               2   //   ESC CSI 58 : 2 : <i> : <r> : <g> : <b> m | Set underline color using RGB values.                                       
+#define SGR_UL_EXTCLR_INDEX             5   //   ESC CSI 58 : 5 : <i>                   m | Set underline color to <n>, using indexed color.                             
+#define SGR_UL_EXTCLR_RGB_2             2   //   ESC CSI 58 ; 2 ; <r> ; <g> ; <b>       m | Set underline color using RGB values.                                       
+//    }
 // } SELECT_GRAPHIC_RENDITION
 // { DEVICE_STATUS_REPORT (DSR)
 #define DEVICE_STATUS_REPORT         'n'    //   ESC CSI  _  n 	                          | Device Status Report (DSR).                
@@ -1035,7 +1045,6 @@ SOFTWARE.
 // is this one the same as Scroll Down? is the difference only the number of arguments?
 // CSI Ps ; Ps ; Ps ; Ps ; Ps T  Initiate highlight mouse tracking (XTHIMOUSE), xterm.
    
-#define ST STRING_TERMINATOR
 /*-----------------------------------------------------------------------------/
 /               Operating System Commands starts with ESC + OSC                /
 /                                                                              /
@@ -1050,15 +1059,17 @@ SOFTWARE.
 /                                                                              /
 /-----------------------------------------------------------------------------*/
 //                                  Byte         Usage                                    | Description
-#define SET_TEXT_PARAMETERS_1       BELL      // ESC OSC <n> ; <t> BEL                    | (STP) Set Text Parameters, xterm. 
-#define SET_TEXT_PARAMETERS_2       ST        // ESC OSC <n> ; <t> ST                     | (STP) Set Text Parameters, xterm.
+// { SET_TEXT_PARAMETERS                      // ESC OSC <n> ; <t> <term>
+#define STP_TERMINATOR_1            BELL      // ESC OSC <n> ; <t> BEL                    | (STP) Set Text Parameters, xterm. 
+#define STP_TERMINATOR_2            ST        // ESC OSC <n> ; <t> ST                     | (STP) Set Text Parameters, xterm.
 #define STP_ICON_NAME_WINDOW_TITLE  0         // ESC OSC  0  ; <t> ST                     | Change Icon Name and Window Title to Pt.
-#define STP_ICON_NAME               1         // ESC OSC  1                               | Change Icon Name to Pt.
-#define STP_WINDOW_TITLE            2         // ESC OSC  2                               | Change Window Title to Pt.
-#define STP_X_PROPERTY              3         // ESC OSC  3                               | Set X property on top-level window.
+#define STP_ICON_NAME               1         // ESC OSC  1  ; <t> ST                     | Change Icon Name to Pt.
+#define STP_WINDOW_TITLE            2         // ESC OSC  2  ; <t> ST                     | Change Window Title to Pt.
+#define STP_X_PROPERTY              3         // ESC OSC  3  ; <t> ST                     | Set X property on top-level window.
 #define STP_COLOR_NUMBER            4         // ESC OSC  4  ;  c  ; spec                 | Change Color Number c to the color specified by spec.
 #define STP_SPECIAL_COLOR_NUMBER    5         // ESC OSC  5  ;  c  ; spec                 | Change Special Color Number c to the color specified by spec.
 #define STP_TOGGLE_SPECIAL_CLRNUM   6         // ESC OSC  6  ;  c  ; f                    | Enable/disable Special Color Number c.
+#define STP_TODO_FIGURE_THIS_OUT    7         // ESC OSC  7  ; <t> ST                     | Zsh expects this shit. I don't what it is.
 #define STP_VT100_FG_COLOR          10        // ESC OSC  10                              | Change VT100 text foreground color to Pt.
 #define STP_VT100_BG_COLOR          11        // ESC OSC  11                              | Change VT100 text background color to Pt.
 #define STP_TEXT_CURSOR_COLOR       12        // ESC OSC  12                              | Change text cursor color to Pt.
@@ -1093,4 +1104,5 @@ SOFTWARE.
 #define STP_SET_ICON_TO_FILE        'I'       // ESC OSC  I ; c                           | Set icon to file.
 #define STP_SET_WINDOW_TITLE        'l'       // ESC OSC  l ; c                           | Set window title.
 #define STP_SET_ICON_LABEL          'L'       // ESC OSC  L ; c                           | Set icon label.
+// } SET_TEXT_PARAMETERS
 
