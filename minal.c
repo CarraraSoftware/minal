@@ -123,7 +123,7 @@ Minal minal_init()
 
     TTF_Font* fallback1 = TTF_OpenFont(FONT_FILE1,m.config.font_size); 
     TTF_Font* fallback2 = TTF_OpenFont(FONT_FILE2,m.config.font_size); 
-    assert(fallback1 && fallback2 && "could not load fallback fonts");
+    assert(fallback1 && fallback2 && "Could not load fallback fonts");
 
     TTF_AddFallbackFont(m.config.font, fallback1);
     TTF_AddFallbackFont(m.config.font, fallback2);
@@ -131,10 +131,6 @@ Minal minal_init()
     // Test checando por caracteres especiais
     // printf("HasGlyph U+E0B0: %d\n", TTF_FontHasGlyph(m.config.font, 0xE0B0));
     // printf("HasGlyph U+279C: %d\n", TTF_FontHasGlyph(m.config.font, 0x279C));
-
-    size_t faces = TTF_GetNumFontFaces(m.config.font);
-
-    printf("faces: %zu\n", faces);
 
     assert(TTF_SetFontSizeDPI(m.config.font, m.config.font_size, m.config.display_dpi, m.config.display_dpi));
 
@@ -855,7 +851,7 @@ SDL_Color minal_select_color_by_index(Minal* m, int idx)
     }
 
     if (idx > 231) {
- idx -= 232;
+        idx -= 232;
         int value = idx * 10 + 8;
         return (SDL_Color) {
             .r = value,
