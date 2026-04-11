@@ -1520,12 +1520,11 @@ void minal_receiver(Minal* m)
             continue;
         }
 
-        // ch = (uint8_t)sv_chop_left(&view);
         int err;
         uint32_t content;
-        int n = c_utf8_buf_to_utf32_char_b(&content, view.data, &err);
-        view.data += n;
-        view.len  -= n;
+        int n = c_utf8_buf_to_utf32_char_b(&content, view.data - 1, &err);
+        view.data += n - 1;
+        view.len  -= n - 1;
         if (err) {
             printf("Failed to convert UTF-8=>UTF-32: %u (n = %d)\n", content, n);
             for (int i = n - 1; i >= 0; --i) {
