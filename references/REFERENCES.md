@@ -42,3 +42,4 @@
     - [wezterm - escape sequences](https://wezterm.org/escape-sequences.html#c0-control-codes)
     - [tmux - ansi standards](https://github.com/tmux/tmux/blob/882fb4d295deb3e4b803eb444915763305114e4f/tools/ansicode.txt)
     - [Math Utah - Screen](https://www.math.utah.edu/docs/info/screen_10.html#SEC51)
+    - [vt100.net - ANSI Control Functions](https://vt100.net/docs/vt510-rm/chapter4.html#S4.6)

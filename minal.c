@@ -21,7 +21,8 @@ size_t utf8_chrlen(char ch)
     return size == 0 ? 1 : size;
 }
 
-void minal_spawn_shell(Minal *m) {
+void minal_spawn_shell(Minal *m) 
+{
     int master_fd;
     int slave_fd;
     if (openpty(&master_fd, &slave_fd, NULL, NULL, NULL) == -1) {
@@ -32,24 +33,22 @@ void minal_spawn_shell(Minal *m) {
     m->shell_pid = fork();
     if (m->shell_pid == 0) {
         login_tty(slave_fd);
-        char cols[50];
-        char rows[50];
         char *path = "/usr/bin/bash";
         char *defaultshell = getenv("SHELL");
         if (defaultshell != NULL)
             path = defaultshell;
         setenv("SHELL", path, true);
-        // setenv("TERM", "vt100", true);
-        setenv("TERM", "xterm", true);
+        setenv("TERM", "vt100", true);
+        // setenv("TERM", "xterm", true);
         // setenv("TERM", "dumb", true);
+        //
         // setenv("PS1",  "\e[32m\xE2\x86\x92\e[m ", true);
-        // setenv("PS1", "➜ ", true);
+        setenv("PS1", "➜ ", true);
         // setenv("PS1",  "\e[32m\xE2\x9E\x9C\e[m ", true);
         // setenv("PS1",  "$ ", true);
 
-
-        sprintf(cols, "%d", m->config.n_cols);
-        sprintf(rows, "%d", m->config.n_rows);
+        char cols[10]; sprintf(cols, "%d", m->config.n_cols);
+        char rows[10]; sprintf(rows, "%d", m->config.n_rows);
         setenv("COLUMNS", cols, true);
         setenv("LINES",   rows, true);
 
@@ -656,7 +655,8 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
 
         case DELETE_CHARS: {
-			printf("TODO: CSI %c\n", DELETE_CHARS);
+            size_t opt = argc > 0 ? argv[0] : 1;
+            minal_delete_chars(m, opt);
 		}; break;
 
         case SCROLL_UP: {
@@ -1123,10 +1123,8 @@ void minal_apply_style(Minal* m, int op)
 
 void minal_graphic_mode(Minal* m, int* argv, int argc)
 {
-    if (argc == 0) {
-        // NOTE: ESC CSI m is treated as ESC CSI 0 m
-        argv[argc++] = 0;
-    }
+    // NOTE: ESC CSI m is treated as ESC CSI 0 m
+    if (argc == 0) argv[argc++] = 0;
     int i = 0; 
     while (i < argc) {
         SDL_Color clr;
@@ -1207,46 +1205,16 @@ Line minal_line_alloc(Minal* m)
 
 void line_print(Line* line)
 {
-    printf("    Line After: {\n");
+    printf("    Line : {\n");
     printf("     cap:   %zu,\n", line->cap);
     printf("     len:   %zu,\n", line->len);
     printf("     items: [ \n");
     for (size_t j = 0; j < line->len; ++j) {
         uint8_t it = line->items[j].content;
-        printf("        - %08b (%c)\n", it, it);
+        printf("        - %08b | %02X (%c)\n", it, it, it);
     }
     printf("   ]}\n");
 }
-
-size_t screen_col2idx(StringView* l, size_t col)
-{
-    if (l->len == 0) return 0;
-
-    size_t i = 0;
-    size_t cols = 0;
-    while (cols < col) {
-        if (i >= l->len) {
-            i++;
-        } else {
-            i += utf8_chrlen(l->data[i]);
-        }
-        cols++;
-    }
-
-    return i;
-}
-
-size_t screen_getline(StringView l, size_t index)
-{
-    const char* og = l.data;
-    size_t lines;
-    while (lines < index && l.len > 0) {
-        sv_chop_line(&l);
-        lines++;
-    }
-    return l.data - og;
-}
-
 
 Cell minal_at(Minal *m, size_t col, size_t row)
 {
@@ -1259,6 +1227,9 @@ void minal_append(Minal* m, size_t row, Cell c)
 {
     assert(row >= 0 && row < m->lines.len);
     Line r = m->lines.items[row];
+    if (m->lines.items[row].len + 1 >= m->config.n_cols) {
+        return;
+    }
     vec_append(&m->lines.items[row], c);
 }
 
@@ -1266,12 +1237,15 @@ void minal_insert_at(Minal* m, size_t col, size_t row, Cell c)
 {
     assert(row >= 0 && row < m->lines.len);
     Line* l = &m->lines.items[row];
+    if (col >= m->config.n_cols) return;
+
+    Cell emptycell = {
+        .content = ' ',
+        .style   = m->cursor.style,
+    };
     if (col >= l->len) {
         int n = col - l->len;
-        Cell emptycell = {0};
-        for (int i = 0; i < n; ++i) {
-            minal_append(m, row, emptycell);
-        }
+        for (int i = 0; i < n; ++i) minal_append(m, row, emptycell);
         minal_append(m, row, c);
         return;
     }
@@ -1280,6 +1254,7 @@ void minal_insert_at(Minal* m, size_t col, size_t row, Cell c)
 
 void minal_erase_in_line(Minal* m, size_t opt)
 //////////////////////////////////////////////
+//  X = cursor.col                          //
 //  opt=0                                   //
 //               start             end      //
 //               v                 v        //
@@ -1300,14 +1275,11 @@ void minal_erase_in_line(Minal* m, size_t opt)
     size_t x    = m->cursor.col;
     size_t y    = minal_cursor2absol(m);
     Line* line  = &m->lines.items[y];
-    if (line->len == 0) {
-        return;
-    }
+    if (line->len == 0) return;
 
     size_t start;
     size_t end;
     switch (opt) {
-
         case ERASE_IN_LINE_LEFT: {
             start = 0;
             end   = x;
@@ -1331,12 +1303,12 @@ void minal_erase_in_line(Minal* m, size_t opt)
         end = tmp;
     }
 
-    // TODO: apply current style to all lines
-    memset(line->items + start, 0, (end - start + 1) * sizeof(*line->items));
-    if (line->len > end - start + 1) {
-        line->len -= end - start + 1;
-    } else {
-        line->len = 0;
+    for (size_t i = start; i <= end; ++i) {
+        line->items[i] = (Cell) {
+            .content = ' ',
+            .style = m->cursor.style,
+        };
+        if (line->len > 0) line->len--;
     }
 }
 
@@ -1399,6 +1371,24 @@ void minal_erase_in_display(Minal* m, size_t opt)
     }
 }
 
+
+void minal_delete_chars(Minal* m, size_t n)
+{
+    size_t row = m->cursor.row;
+    size_t col = m->cursor.col;
+    size_t len = m->lines.items[row].len;
+    if (col >= len) {
+        return;
+    }
+
+    n = MIN(n, len - col);
+    Cell* dst = m->lines.items[row].items + col;
+    Cell* src =  dst + n;
+    size_t dif = len - (col + n);
+    memmove(dst, src, dif);
+    m->lines.items[row].len -= n;
+}
+
 void minal_linefeed(Minal* m)
 {
     if (m->cursor.row + 1 > m->reg_bot) {
@@ -1433,7 +1423,7 @@ void minal_receiver(Minal* m)
     };
 
 #ifdef DEBUG
-    FILE* f = fopen("dump.txt", "a");
+    FILE* f = fopen("dump/dump.txt", "a");
     char out[10];
     for (size_t i = 0; i < view.len; ++i) {
         char ch = *(view.data + i);
@@ -1479,9 +1469,7 @@ void minal_receiver(Minal* m)
         }
 
         if (ch == BACKSPACE) {
-            if (!(x > 0 || m->cursor.row > 0)) {
-                continue;
-            }
+            if (x == 0 && m->cursor.row == 0) continue;
 
             if (!m->autowrap) {
                 minal_cursor_move(m, x - 1, m->cursor.row);
@@ -1498,15 +1486,15 @@ void minal_receiver(Minal* m)
         }
 
         if (ch == ESC) {
-#ifdef DEBUG
-            printf("ESC ");
+        #ifdef DEBUG 
             StringView before = view;
-#endif
+        #endif
+
             minal_parse_ansi(m, &view);
 
-#ifdef DEBUG
-            StringView after = view;
-            size_t n = before.len - after.len;
+        #ifdef DEBUG
+            printf("ESC ");
+            size_t n = before.len - view.len;
             for (size_t i = 0; i < n; ++i) {
                 uint8_t ch = before.data[i];
                 if (isprint(ch)) {
@@ -1514,14 +1502,15 @@ void minal_receiver(Minal* m)
                 } else {
                     printf("%02X ", ch);
                 }
-            }
+            };
             printf("\n");
-#endif
+        #endif
             continue;
         }
 
         int err;
         uint32_t content;
+        //TODO: remove dependency on convert.h
         int n = c_utf8_buf_to_utf32_char_b(&content, view.data - 1, &err);
         view.data += n - 1;
         view.len  -= n - 1;
@@ -1539,15 +1528,15 @@ void minal_receiver(Minal* m)
         };
 
         minal_insert_at(m, x, y, cell);
-        if (!m->autowrap) {
-            minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
-        } else {
-            if (m->cursor.col == m->config.n_cols - 1) {
-                minal_carriageret(m);
-                minal_linefeed(m);
+        if (m->cursor.col == m->config.n_cols - 1) {
+            if (!m->autowrap) {
+                minal_cursor_move(m, 0, m->cursor.row);
             } else {
-                minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
+                minal_linefeed(m);
+                minal_carriageret(m);
             }
+        } else {
+            minal_cursor_move(m, m->cursor.col + 1, m->cursor.row);
         }
     }
 }
@@ -1567,228 +1556,12 @@ void minal_transmitter(Minal* m, SDL_Event* event)
     }
 
     if (event->type == SDL_EVENT_KEY_DOWN) {
-        SDL_Keycode k = event->key.key;
-        if (event->key.mod & SDL_KMOD_CTRL) {
-            switch (event->key.key) {
-                 case SDLK_AT: {
-					minal_write_char(m, NULL_);
-				 }; break;
-                 case SDLK_A: {
-					minal_write_char(m, START_OF_HEADING);
-				 }; break;
-                 case SDLK_B: {
-					minal_write_char(m, START_OF_TEXT);
-				 }; break;
-                 case SDLK_C: {
-					minal_write_char(m, END_OF_TEXT);
-				 }; break;
-                 case SDLK_D: {
-					minal_write_char(m, END_OF_TRANSMISSION);
-				 }; break;
-                 case SDLK_E: {
-					minal_write_char(m, ENQUIRY);
-				 }; break;
-                 case SDLK_F: {
-					minal_write_char(m, ACKNOWLEDGE);
-				 }; break;
-                 case SDLK_G: {
-					minal_write_char(m, BELL);
-				 }; break;
-                 case SDLK_H: {
-					minal_write_char(m, BACKSPACE);
-				 }; break;
-                 case SDLK_I: {
-					minal_write_char(m, TAB);
-				 }; break;
-                 case SDLK_J: {
-					minal_write_char(m, LINEFEED);
-				 }; break;
-                 case SDLK_K: {
-					minal_write_char(m, VERTTAB);
-				 }; break;
-                 case SDLK_L: {
-					minal_write_char(m, FORMFEED);
-				 }; break;
-                 case SDLK_M: {
-					minal_write_char(m, CARRIAGERET);
-				 }; break;
-                 case SDLK_N: {
-					minal_write_char(m, SHIFT_OUT);
-				 }; break;
-                 case SDLK_O: {
-					minal_write_char(m, SHIFT_IN);
-				 }; break;
-                 case SDLK_P: {
-					minal_write_char(m, DATA_LINK_ESCAPE);
-				 }; break;
-                 case SDLK_Q: {
-					minal_write_char(m, DEVICE_CONTROL_ONE);
-				 }; break;
-                 case SDLK_R: {
-					minal_write_char(m, DEVICE_CONTROL_TWO);
-				 }; break;
-                 case SDLK_S: {
-					minal_write_char(m, DEVICE_CONTROL_THREE);
-				 }; break;
-                 case SDLK_T: {
-					minal_write_char(m, DEVICE_CONTROL_FOUR);
-				 }; break;
-                 case SDLK_U: {
-					minal_write_char(m, NEGATIVE_ACKNOWLEDGE);
-				 }; break;
-                 case SDLK_V: {
-					minal_write_char(m, SYNCHRONOUS_IDLE);
-				 }; break;
-                 case SDLK_W: {
-					minal_write_char(m, END_TRANSMISSION_BLOCK);
-				 }; break;
-                 case SDLK_X: {
-					minal_write_char(m, CANCEL);
-				 }; break;
-                 case SDLK_Y: {
-					minal_write_char(m, END_OF_MEDIUM);
-				 }; break;
-                 case SDLK_Z: {
-					minal_write_char(m, SUBSTITUTE);
-				 }; break;
-                 case SDLK_LEFTBRACKET: {
-					minal_write_char(m, ESC);
-				 }; break;
-                 case SDLK_BACKSLASH: { 
-                    minal_write_char(m, FILE_SEPARATOR);
-                }; break;
-                 case SDLK_RIGHTBRACKET: {
-					minal_write_char(m, GROUP_SEPARATOR);
-				 }; break;
-                 case SDLK_CARET: {
-					minal_write_char(m, RECORD_SEPARATOR);
-				 }; break;
-                 case SDLK_UNDERSCORE: {
-					minal_write_char(m, UNIT_SEPARATOR);
-				 }; break;
-            }                   
-        } else if (event->key.mod & SDL_KMOD_ALT) {
-            switch (event->key.key) {
-                 case SDLK_A: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'a');
-				 }; break;
-                 case SDLK_B: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'b');
-				 }; break;
-                 case SDLK_C: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'c');
-				 }; break;
-                 case SDLK_D: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'd');
-				 }; break;
-                 case SDLK_E: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'e');
-				 }; break;
-                 case SDLK_F: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'f');
-				 }; break;
-                 case SDLK_G: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'g');
-				 }; break;
-                 case SDLK_H: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'h');
-				 }; break;
-                 case SDLK_I: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'i');
-				 }; break;
-                 case SDLK_J: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'j');
-				 }; break;
-                 case SDLK_K: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'k');
-				 }; break;
-                 case SDLK_L: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'l');
-				 }; break;
-                 case SDLK_M: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'm');
-				 }; break;
-                 case SDLK_N: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'n');
-				 }; break;
-                 case SDLK_O: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'o');
-				 }; break;
-                 case SDLK_P: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'p');
-				 }; break;
-                 case SDLK_Q: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'q');
-				 }; break;
-                 case SDLK_R: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'r');
-				 }; break;
-                 case SDLK_S: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 's');
-				 }; break;
-                 case SDLK_T: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 't');
-				 }; break;
-                 case SDLK_U: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'u');
-				 }; break;
-                 case SDLK_V: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'v');
-				 }; break;
-                 case SDLK_W: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'w');
-				 }; break;
-                 case SDLK_X: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'x');
-				 }; break;
-                 case SDLK_Y: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'y');
-				 }; break;
-                 case SDLK_Z: {
-					minal_write_char(m, ESC);
-					minal_write_char(m, 'z');
-				 }; break;
-            }
-        } else {
-            switch (k) {
-                case (SDLK_F1): {
-                    minal_write_str(m, "𒀀");
-                }; break;
-                default: {
-                    const char* code = SDLK_to_ansicode(k);
-                    if (strlen(code) == 0) {
-                        break;
-                    }
-                    minal_write_str(m, code);
-                }; break;
-            }
-        }
+        char code[10];
+        size_t n = SDLKeyboardEvent_to_ansicode(event->key, code);
+        if (n == 0) return;
+        minal_write_str(m, code);
     }
+
     if (event->type == SDL_EVENT_TEXT_INPUT) {
         minal_write_str(m, event->text.text);
     }
@@ -1838,7 +1611,7 @@ void minal_render_text(Minal* m)
     }
 
 #ifdef DUMP_BUFFER
-    FILE* f = fopen("buffer.txt", "a");
+    FILE* f = fopen("dump/buffer.txt", "a");
 #endif
 
     for (size_t row = row_start; row <= m->row_offset + m->reg_bot; row++) {
@@ -2046,57 +1819,115 @@ void find_full_feature_fonts(Minal m)
     }
     return;
 }
+
 int main(void)
 {
     Minal m = minal_init();
-    // TTF_FontHasGlyph(m.config.font, "➜");
-    // printf("Has %c? %s\n", 0x00000061, TTF_FontHasGlyph(m.config.font, 0x00000061) ? "true": "false") ;
-    // uint32_t s;
-    // s = TTF_GetFontScript(m.config.font);
-    // printf("Font Script Before: %.*s\n", 4, (char*)&s);
-
-    // s = TTF_GetGlyphScript(0x0000279C);
-    // printf("Glyph Script: %.*s\n", 4, (char*)&s);
-
-    // assert(TTF_SetFontScript(m.config.font, s));
-    // s = TTF_GetFontScript(m.config.font);
-    // printf("Font Script After: %.*s\n", 4, (char*)&s);
-    // find_full_feature_fonts(m);
-    // return 0;
     minal_run(&m);
     minal_finish(&m);
     return 0;
 }
 
-const char* SDLK_to_ansicode(SDL_Keycode key)
+size_t SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char out[10])
 {
-    switch (key) {
-        case SDLK_BACKSPACE: return "\b";
-        case SDLK_RETURN:    return "\n";
-        case SDLK_TAB:       return "\t";
-        case SDLK_UP:        return "\x1B[A";
-        case SDLK_DOWN:      return "\x1B[B";
-        case SDLK_RIGHT:     return "\x1B[C";
-        case SDLK_LEFT:      return "\x1B[D";
-        case SDLK_HOME:      return "\x1B[1~";
-        case SDLK_INSERT:    return "\x1B[2~";
-        case SDLK_DELETE:    return "\x1B[3~";
-        case SDLK_END:       return "\x1B[4~";
-        case SDLK_PAGEUP:    return "\x1B[S";
-        case SDLK_PAGEDOWN:  return "\x1B[T";
-        case SDLK_F1:        return "\x1B[OP";
-        case SDLK_F2:        return "\x1B[OQ";
-        case SDLK_F3:        return "\x1B[OR";
-        case SDLK_F4:        return "\x1B[OS";
-        case SDLK_F5:        return "\x1B[15~";
-        case SDLK_F6:        return "\x1B[17~";
-        case SDLK_F7:        return "\x1B[18~";
-        case SDLK_F8:        return "\x1B[19~";
-        case SDLK_F9:        return "\x1B[20~";
-        case SDLK_F10:       return "\x1B[21~";
-        case SDLK_F11:       return "\x1B[23~";
-        case SDLK_F12:       return "\x1B[24~";
-        default: return "";
-    }
+    SDL_Keycode k = ev.key;
+    size_t n = 0;
+    if (ev.mod & SDL_KMOD_CTRL) {
+        switch (k) {
+             case SDLK_AT:           out[n++] = NULL_;                  break;
+             case SDLK_A:            out[n++] = START_OF_HEADING;       break;
+             case SDLK_B:            out[n++] = START_OF_TEXT;          break;
+             case SDLK_C:            out[n++] = END_OF_TEXT;            break;
+             case SDLK_D:            out[n++] = END_OF_TRANSMISSION;    break;
+             case SDLK_E:            out[n++] = ENQUIRY;                break;
+             case SDLK_F:            out[n++] = ACKNOWLEDGE;            break;
+             case SDLK_G:            out[n++] = BELL;                   break;
+             case SDLK_H:            out[n++] = BACKSPACE;              break;
+             case SDLK_I:            out[n++] = TAB;                    break;
+             case SDLK_J:            out[n++] = LINEFEED;               break;
+             case SDLK_K:            out[n++] = VERTTAB;                break;
+             case SDLK_L:            out[n++] = FORMFEED;               break;
+             case SDLK_M:            out[n++] = CARRIAGERET;            break;
+             case SDLK_N:            out[n++] = SHIFT_OUT;              break;
+             case SDLK_O:            out[n++] = SHIFT_IN;               break;
+             case SDLK_P:            out[n++] = DATA_LINK_ESCAPE;       break;
+             case SDLK_Q:            out[n++] = DEVICE_CONTROL_ONE;     break;
+             case SDLK_R:            out[n++] = DEVICE_CONTROL_TWO;     break;
+             case SDLK_S:            out[n++] = DEVICE_CONTROL_THREE;   break;
+             case SDLK_T:            out[n++] = DEVICE_CONTROL_FOUR;    break;
+             case SDLK_U:            out[n++] = NEGATIVE_ACKNOWLEDGE;   break;
+             case SDLK_V:            out[n++] = SYNCHRONOUS_IDLE;       break;
+             case SDLK_W:            out[n++] = END_TRANSMISSION_BLOCK; break;
+             case SDLK_X:            out[n++] = CANCEL;                 break;
+             case SDLK_Y:            out[n++] = END_OF_MEDIUM;          break;
+             case SDLK_Z:            out[n++] = SUBSTITUTE;             break;
+             case SDLK_LEFTBRACKET:  out[n++] = ESC;                    break;
+             case SDLK_BACKSLASH:    out[n++] = FILE_SEPARATOR;         break;
+             case SDLK_RIGHTBRACKET: out[n++] = GROUP_SEPARATOR;        break;
+             case SDLK_CARET:        out[n++] = RECORD_SEPARATOR;       break;
+             case SDLK_UNDERSCORE:   out[n++] = UNIT_SEPARATOR;         break;
+        }
+    } else if (ev.mod & SDL_KMOD_ALT) {
+        switch (k) {
+             case SDLK_A: out[n++] = ESC; out[n++] = 'a'; break;
+             case SDLK_B: out[n++] = ESC; out[n++] = 'b'; break;
+             case SDLK_C: out[n++] = ESC; out[n++] = 'c'; break;
+             case SDLK_D: out[n++] = ESC; out[n++] = 'd'; break;
+             case SDLK_E: out[n++] = ESC; out[n++] = 'e'; break;
+             case SDLK_F: out[n++] = ESC; out[n++] = 'f'; break;
+             case SDLK_G: out[n++] = ESC; out[n++] = 'g'; break;
+             case SDLK_H: out[n++] = ESC; out[n++] = 'h'; break;
+             case SDLK_I: out[n++] = ESC; out[n++] = 'i'; break;
+             case SDLK_J: out[n++] = ESC; out[n++] = 'j'; break;
+             case SDLK_K: out[n++] = ESC; out[n++] = 'k'; break;
+             case SDLK_L: out[n++] = ESC; out[n++] = 'l'; break;
+             case SDLK_M: out[n++] = ESC; out[n++] = 'm'; break;
+             case SDLK_N: out[n++] = ESC; out[n++] = 'n'; break;
+             case SDLK_O: out[n++] = ESC; out[n++] = 'o'; break;
+             case SDLK_P: out[n++] = ESC; out[n++] = 'p'; break;
+             case SDLK_Q: out[n++] = ESC; out[n++] = 'q'; break;
+             case SDLK_R: out[n++] = ESC; out[n++] = 'r'; break;
+             case SDLK_S: out[n++] = ESC; out[n++] = 's'; break;
+             case SDLK_T: out[n++] = ESC; out[n++] = 't'; break;
+             case SDLK_U: out[n++] = ESC; out[n++] = 'u'; break;
+             case SDLK_V: out[n++] = ESC; out[n++] = 'v'; break;
+             case SDLK_W: out[n++] = ESC; out[n++] = 'w'; break;
+             case SDLK_X: out[n++] = ESC; out[n++] = 'x'; break;
+             case SDLK_Y: out[n++] = ESC; out[n++] = 'y'; break;
+             case SDLK_Z: out[n++] = ESC; out[n++] = 'z'; break;
+        }
+    } else {
+        switch (ev.key) {
+            // case SDLK_F1:          out = "𒀀"; n = strlen("𒀀"); break;// multibyte char for testing
+
+            case SDLK_BACKSPACE:   out[n++] = BACKSPACE; break;
+            case SDLK_RETURN:      out[n++] = LINEFEED; break;
+            case SDLK_TAB:         out[n++] = TAB; break;
+            case SDLK_UP:          out[n++] = ESC; out[n++] = '['; out[n++] = 'A'; break;
+            case SDLK_DOWN:        out[n++] = ESC; out[n++] = '['; out[n++] = 'B'; break;
+            case SDLK_RIGHT:       out[n++] = ESC; out[n++] = '['; out[n++] = 'C'; break;
+            case SDLK_LEFT:        out[n++] = ESC; out[n++] = '['; out[n++] = 'D'; break;
+            case SDLK_HOME:        out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '~'; break;
+            case SDLK_INSERT:      out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '~'; break;
+            case SDLK_DELETE:      out[n++] = ESC; out[n++] = '['; out[n++] = '3'; out[n++] = '~'; break;
+            case SDLK_END:         out[n++] = ESC; out[n++] = '['; out[n++] = '4'; out[n++] = '~'; break;
+            case SDLK_PAGEUP:      out[n++] = ESC; out[n++] = '['; out[n++] = 'S'; break;
+            case SDLK_PAGEDOWN:    out[n++] = ESC; out[n++] = '['; out[n++] = 'T'; break;
+            case SDLK_F1:          out[n++] = ESC; out[n++] = '['; out[n++] = 'O'; out[n++] = 'P'; break;
+            case SDLK_F2:          out[n++] = ESC; out[n++] = '['; out[n++] = 'O'; out[n++] = 'Q'; break;
+            case SDLK_F3:          out[n++] = ESC; out[n++] = '['; out[n++] = 'O'; out[n++] = 'R'; break;
+            case SDLK_F4:          out[n++] = ESC; out[n++] = '['; out[n++] = 'O'; out[n++] = 'S'; break;
+            case SDLK_F5:          out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '5';  out[n++] = '~'; break;
+            case SDLK_F6:          out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '7';  out[n++] = '~'; break;
+            case SDLK_F7:          out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '8';  out[n++] = '~'; break;
+            case SDLK_F8:          out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '9';  out[n++] = '~'; break;
+            case SDLK_F9:          out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '0';  out[n++] = '~'; break;
+            case SDLK_F10:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '1';  out[n++] = '~'; break;
+            case SDLK_F11:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '3';  out[n++] = '~'; break;
+            case SDLK_F12:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '4';  out[n++] = '~'; break;
+        }
+    } 
+    out[n] = '\0';
+    return n;
 }
 

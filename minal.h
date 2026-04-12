@@ -27,7 +27,7 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #define DEBUG true
-#define DUMP_BUFFER true
+// #define DUMP_BUFFER true
 
 #include "convert.h"
 
@@ -138,7 +138,7 @@ typedef struct {
 } Cell;
 
 typedef struct {
-    Cell* items;
+    Cell*    items;
     size_t   len;
     size_t   cap;
 } Line;
@@ -196,6 +196,7 @@ void        minal_run(Minal* m);
 void        minal_parse_ansi(Minal* m, StringView* bytes);
 void        minal_erase_in_line(Minal* m, size_t opt);
 void        minal_erase_in_display(Minal* m, size_t opt);
+void        minal_delete_chars(Minal* m, size_t n);
 void        minal_pageup(Minal* m, size_t opt);
 void        minal_pagedown(Minal* m, size_t opt);
 void        minal_linefeed(Minal* m);
@@ -235,7 +236,7 @@ size_t      screen_col2idx(StringView* l, size_t col);
 size_t      screen_getline(StringView l, size_t index);
 
 // helpers
-const char* SDLK_to_ansicode(SDL_Keycode key);
+size_t      SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char* out);
 bool        is_utf8_head(uint8_t ch);
 size_t      utf8_chrlen(char ch);
 
@@ -243,7 +244,7 @@ size_t      utf8_chrlen(char ch);
 // colors and styles
 // TODO: not use constants for all these stuff
 //       as to allow users to change these values dynamically
-#define DEFAULT_FG_COLOR WHITE
+#define DEFAULT_FG_COLOR BRIGHT_WHITE
 #define DEFAULT_BG_COLOR BLACK
 
 // Colors from Debug console, "Dark+" theme for VSCode.
@@ -276,7 +277,7 @@ const SDL_Color BASE_COLORS[] = {
      [BLUE] 	       = { .r =  36, .g = 114, .b = 200, .a = 255 },
      [MAGENTA]         = { .r = 188, .g =  63, .b = 188, .a = 255 },
      [CYAN] 	       = { .r =  17, .g = 168, .b = 205, .a = 255 },
-     [WHITE] 	       = { .r = 230, .g = 230, .b = 230, .a = 255 },
+     [WHITE] 	       = { .r = 150, .g = 150, .b = 150, .a = 255 },
      [BRIGHT_BLACK]    = { .r = 102, .g = 102, .b = 102, .a = 255 },
      [BRIGHT_RED] 	   = { .r = 241, .g =  76, .b =  76, .a = 255 },
      [BRIGHT_GREEN]    = { .r =  35, .g = 209, .b = 139, .a = 255 },
