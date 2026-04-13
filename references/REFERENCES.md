@@ -46,3 +46,9 @@
     ### MEH
     - [Ghostty](https://ghostty.org/docs/vt/reference)
     - [ECMA-48 - 5th Edition](https://ecma-international.org/wp-content/uploads/ECMA-48_5th_edition_june_1991.pdf)
+
+- TermInfo
+    - [Wrapping](https://www.gnu.org/software/termutils/manual/termcap-1.3/html_node/termcap_27.html)
+
+- ZSH:
+    - [Stack Exchange - zsh's PROMPT_EOL_MARK](https://unix.stackexchange.com/posts/302710/revisions)

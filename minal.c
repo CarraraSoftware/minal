@@ -176,10 +176,10 @@ Minal minal_init()
         .style = DEFAULT_STYLE,
     };
 
-    m.autowrap = true;
+    m.autowrap           = true;
     m.keypad_application = false;
     m.cursor_application = false;
-    m.autonewline       = true;
+    m.autonewline        = false;
     m.bracketed_paste    = false;
 
     assert(SDL_StartTextInput(m.window));
@@ -863,7 +863,7 @@ SDL_FRect minal_cursor_to_rect(Minal* m)
 void minal_cursor_move(Minal* m, int new_col, int new_row)
 {
     assert(0 <= new_row && new_row < m->config.n_rows);
-    assert(0 <= new_col && new_col < m->config.n_cols);
+    assert(0 <= new_col && new_col <= m->config.n_cols);
     m->cursor.col = new_col;
     m->cursor.row = new_row;
 }
@@ -1190,7 +1190,8 @@ Line minal_line_alloc(Minal* m)
 {
     Line l = {0};
     vec_expandto(&l, m->config.n_cols);
-    memset(l.items, 0, l.cap * sizeof(*l.items));
+    for (size_t i = 0; i < m->config.n_cols; ++i) 
+        vec_append(&l, default_cell(m));
     return l;
 }
 
@@ -1205,6 +1206,15 @@ void line_print(Line* line)
         printf("        - %08b | %02X (%c)\n", it, it, it);
     }
     printf("   ]}\n");
+}
+
+Cell default_cell(Minal *m)
+{
+    Cell c = {
+        .style = m->cursor.style,
+        .content = ' ',
+    };
+    return c;
 }
 
 Cell minal_at(Minal *m, size_t col, size_t row)
@@ -1278,13 +1288,13 @@ void minal_erase_in_line(Minal* m, size_t opt)
 
         case ERASE_IN_LINE_ALL: {
             start = 0;
-            end   = line->len - 1;
+            end   = m->config.n_cols - 1;
         }; break;
 
         case ERASE_IN_LINE_RIGHT:
         default: {
             start = x;
-            end   = line->len - 1;
+            end   = m->config.n_cols - 1;
         }; break;
     }
 
@@ -1295,7 +1305,6 @@ void minal_erase_in_line(Minal* m, size_t opt)
             .content = ' ',
             .style = m->cursor.style,
         };
-        if (line->len > 0) line->len--;
     }
 }
 
@@ -1312,10 +1321,10 @@ void minal_erase_in_display(Minal* m, size_t opt)
     if (opt == ERASE_IN_DISPLAY_SAVED) {
         m->row_offset = 0;
 
-        // TODO: apply current style to all collumns in all lines
         for (int i = 0; i < m->lines.len; ++i) {
-            memset(m->lines.items[i].items, 0, m->lines.items[i].len);
-            m->lines.items[i].len = 0;
+            Cell def = default_cell(m);
+            for (size_t j = 0; j < m->config.n_cols; ++j) 
+                m->lines.items[i].items[j] = def;
         }
 
         m->lines.len = m->config.n_rows;
@@ -1351,7 +1360,7 @@ void minal_erase_in_display(Minal* m, size_t opt)
         }
     }
 
-    if (opt == ERASE_IN_LINE_ALL) {
+    if (opt == ERASE_IN_DISPLAY_ALL) {
         minal_cursor_move(m, 0, 0);
     } else {
         minal_cursor_move(m, x, y);
@@ -1451,6 +1460,7 @@ void minal_receiver(Minal* m)
             #ifdef DEBUG
             printf("\\n\n");
             #endif
+            if (m->autonewline) minal_carriageret(m);
             minal_linefeed(m);
             continue;
         }
@@ -1535,7 +1545,7 @@ void minal_receiver(Minal* m)
         };
 
         minal_insert_at(m, x, y, cell);
-        if (m->cursor.col == m->config.n_cols - 1) {
+        if (m->cursor.col == m->config.n_cols) {
             if (!m->autowrap) {
                 minal_cursor_move(m, 0, m->cursor.row);
             } else {

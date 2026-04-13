@@ -26,7 +26,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#define DEBUG true
+// #define DEBUG true
 // #define DUMP_BUFFER true
 
 #include "convert.h"
@@ -88,10 +88,10 @@
 #define FONT_FILE_5         "/usr/share/fonts/gnu-free/FreeSerif.otf"
 #define FONT_FILE_6         "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
 
-#define DEFAULT_FONT_SIZE   18.0f
+#define DEFAULT_FONT_SIZE   14.0f
 #define DEFAULT_DISPLAY_DPI 96
-#define DEFAULT_N_COLS      80
-#define DEFAULT_N_ROWS      24
+#define DEFAULT_N_COLS      165
+#define DEFAULT_N_ROWS      38
 
 #define FPS    60
 
@@ -222,6 +222,7 @@ void        minal_render_text(Minal* m);
 Cell        minal_at(Minal *m, size_t col, size_t row);
 void        minal_insert_at(Minal* m, size_t col, size_t row, Cell c);
 void        minal_append(Minal* m, size_t row, Cell c);
+Cell        default_cell(Minal *m);
 
 // line
 void        minal_new_line(Minal *m);
