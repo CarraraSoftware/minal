@@ -1,5 +1,4 @@
 #include "minal.h"
-#include <SDL3/SDL_render.h>
 
 #define MOD(a, b) ((((a) % (b)) + (b)) % (b))
 
@@ -42,8 +41,8 @@ void minal_spawn_shell(Minal *m)
             path = defaultshell;
         setenv("SHELL", path, true);
 
-        // setenv("TERM", "vt100", true);
-        setenv("TERM", "xterm", true);
+        setenv("TERM", "vt100", true);
+        // setenv("TERM", "xterm", true);
         // setenv("TERM", "dumb", true);
 
         // setenv("PS1",  "\e[32m\xE2\x86\x92\e[m ", true);
@@ -393,28 +392,14 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 
             b = sv_chop_left(bytes);
             switch (b) {
-                case 'T': {
-                    printf("TODO: CSI > '%c'\n", b);
-                }; break;
-                case 'c': {
-                    printf("TODO: CSI > '%c'\n", b);
-                }; break; 
-                case 'f': {
-                    printf("TODO CSI > '%c'\n", b);
-                }; break;
-                case 'm': {
-                    printf("TODO CSI > '%c'\n", b);
-                }; break;
-                case 'n': {
-                    printf("TODO CSI > '%c'\n", b);
-                }; break;
-                case 'p': {
-                    printf("TODO CSI > '%c'\n", b);
-                }; break;
-                case 'q': {
-                    printf("TODO CSI > '%c'\n", b);
-                }; break;
-                case 's': {
+                case RESET_TITLE_MODE_FEATURES:        printf("TODO: ESC CSI > RESET_TITLE_MODE_FEATURES %d\n", argc > 0 ? argv[0] : 0); break;
+                case SEND_DEVICE_ATTRIBUTES_SECONDARY: printf("TODO: ESC CSI > SEND_DEVICE_ATTRIBUTES_SECONDARY %d\n", argc > 0 ? argv[0] : 0); break;
+                case SETRST_FORMAT_KEY_OPTIONS:        printf("TODO: ESC CSI > SETRST_FORMAT_KEY_OPTIONS %d\n", argc > 0 ? argv[0] : 0); break;
+                case SETRST_MODIFIER_KEY_OPTIONS:      printf("TODO: ESC CSI > SETRST_MODIFIER_KEY_OPTIONS %d\n", argc > 0 ? argv[0] : 0); break;
+                case DISABLE_KEY_MODIFIER_OPTIONS:     printf("TODO: ESC CSI > DISABLE_KEY_MODIFIER_OPTIONS %d\n", argc > 0 ? argv[0] : 0); break;
+                case SET_POINTER_MODE:                 printf("TODO: ESC CSI > SET_POINTER_MODE %d\n", argc > 0 ? argv[0] : 0); break;
+                case REPORT_XTERM_NAME_VERSION:        printf("TODO: ESC CSI > REPORT_XTERM_NAME_VERSION %d\n", argc > 0 ? argv[0] : 0); break;
+                case STRST_SHIFT_ESCAPE_OPTIONS: {
                     int opt = 0;
                     if (argc > 0) {
                         opt = argv[0];
@@ -428,15 +413,15 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                     switch (opt) {
                         case 0: 
                         case 1: {
-                            printf("TODO: CSI XTSHITESCAPE not implemented\n");
+                            printf("TODO: ESC CSI > STRST_SHIFT_ESCAPE_OPTIONS %d\n", opt);
                         }; break;
                     }
 
                 }; break;
-                case 't': {
-                    printf("TODO CSI > '%c'\n", b);
+                case STQRY_TITLE_MODE_FEATURES: {
+                    printf("TODO CSI > STQRY_TITLE_MODE_FEATURES %d\n", argc > 0 ? argv[0] : 0);
                 }; break;
-                default: printf("UNKNOWN subcommando for CSI_GT_PREFIX: %08b | %02X (%c)\n", b, b, b);
+                default: printf("UNKNOWN CSI SEQUENCE: ESC CSI > %c\n", b);
             }
             return;
         };
@@ -557,6 +542,15 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 
     b = sv_chop_left(bytes);
     switch (b) {
+        case WINDOW_MANIPULATION: {
+            printf("TODO: ESC CSI "); 
+            for (int i = 0; i < argc; ++i) {
+                printf("%d", argv[i]);
+                if (i < argc - 1) printf(";");
+                printf(" ");
+            }
+            printf("WINDOW_MANIPULATION\n");
+        }; break;
 
         case CURSOR_UP: {
             int opt = argc > 0 ? argv[0] : 1;
@@ -609,9 +603,10 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
         case CURSOR_POSITION: {
             int opt1 = argc > 0 ? argv[0] : 1;
             int opt2 = argc > 1 ? argv[1] : 1;
+            printf("ESC CSI H => CURSOR POSITION: { %d, %d }\n", opt1, opt2);
 
-            size_t new_col = MIN(MAX(0, opt1 - 1), m->config.n_cols - 1);
-            size_t new_row = MIN(MAX(0, opt2 - 1), m->config.n_rows - 1);
+            size_t new_row = MIN(MAX(0, opt1 - 1), m->config.n_rows - 1);
+            size_t new_col = MIN(MAX(0, opt2 - 1), m->config.n_cols - 1);
             minal_cursor_move(m, new_col, new_row);
         }; break;
 
@@ -673,7 +668,7 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
 
         case DEVICE_ATTRIBUTES_REPORT: {
-			printf("TODO: CSI %c\n", DEVICE_ATTRIBUTES_REPORT);
+			minal_write_str(m, "\x1B[?1c");
 		}; break;
 
         case LINE_POSITION_ABSOLUTE: {
@@ -780,6 +775,65 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
 {
     uint8_t b = sv_chop_left(bytes);
     switch (b) {
+        case DESIGNATE_G0_CHARSET: {
+            b = sv_chop_left(bytes);
+            switch (b) {
+                case G0CHSET_UK:
+                case G0CHSET_US:
+                case G0CHSET_FINNISH_1:
+                case G0CHSET_FINNISH_2:
+                case G0CHSET_SWEDISH_1:
+                case G0CHSET_SWEDISH_2:
+                case G0CHSET_GERMAN:
+                case G0CHSET_FR_CANADIAN_1:
+                case G0CHSET_FR_CANADIAN_2:
+                case G0CHSET_FRENCH_1:
+                case G0CHSET_FRENCH_2:
+                case G0CHSET_ITALIAN:
+                case G0CHSET_SPANISH:
+                case G0CHSET_DUTCH:
+                case G0CHSET_SWISS:
+                case G0CHSET_NORWEGIAN_DANISH_1:
+                case G0CHSET_NORWEGIAN_DANISH_2:
+                case G0CHSET_NORWEGIAN_DANISH_3:
+                case G0CHSET_DEC_SPECIAL:
+                case G0CHSET_SUPPLEMENTAL:
+                // case G0CHSET_USER_PREFERRED:
+                case G0CHSET_DEC_TECHNICAL:
+                case G0CHSET_JIS_KATAKANA:
+                case G0CHSET_JIS_ROMAN:
+                    printf("IGNORE DESIGNATE GO CHARSET + %c\n", b); break;
+                case G0CHSET_PREFIX_1:
+                    b = sv_chop_left(bytes);
+                    switch (b) {
+                        case G0CHSET_GREEK:
+                        case G0CHSET_DEC_HEBREW:
+                        case G0CHSET_DEC_GREEK:
+                            printf("IGNORE DESIGNATE GO CHARSET + PREFIX_1 + %c\n", b); break;
+                    };
+                case G0CHSET_PREFIX_2: {
+                    b = sv_chop_left(bytes);
+                    switch (b) {
+                        case G0CHSET_PORTUGUESE:
+                        case G0CHSET_HEBREW_PREFIX:
+                        case G0CHSET_DEC_TURKISH:
+                        case G0CHSET_DEC_SUP_GRAPHICS:
+                        case G0CHSET_SCS_NRCS:
+                            printf("IGNORE DESIGNATE GO CHARSET + PREFIX_2 + %c\n", b); break;
+                    }
+                }
+                
+                case G0CHSET_PREFIX_3:
+                    b = sv_chop_left(bytes);
+                    switch (b) {
+                        case G0CHSET_DEC_CYRILLIC:
+                        case G0CHSET_DEC_RUSSIAN:
+                            printf("IGNORE DESIGNATE GO CHARSET + PREFIX_3 + %c\n", b); break;
+                    }
+            }
+            return;
+        }
+
 
         case DEC_SAVE_CURSOR: {
             sv_chop_left(bytes);
@@ -800,6 +854,7 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
 
         case REVERSE_INDEX: {
             if (m->cursor.row > 0) minal_cursor_move(m, m->cursor.col, m->cursor.row - 1);
+            else                   minal_pageup(m, 1);
             return;
         }
 
@@ -1402,6 +1457,16 @@ void minal_carriageret(Minal* m)
     minal_cursor_move(m, 0, m->cursor.row);
 }
 
+void debug(char* escape)
+{
+    #ifdef DEBUG
+    static size_t dbg_escape_count = 0;
+    printf("[%03zu] %s", dbg_escape_count++, escape);
+    #endif
+    return;
+}
+
+
 void minal_receiver(Minal* m)
 {
     size_t offset = 0;
@@ -1443,46 +1508,34 @@ void minal_receiver(Minal* m)
         size_t y   = minal_cursor2absol(m);
 
         if (ch == '\0') {
-            #ifdef DEBUG
-            printf("\\0\n");
-            #endif
+            // debug("NULL\n");
             continue;
         }
 
         if (ch == BELL) {
-            #ifdef DEBUG
-            printf("BELL\n");
-            #endif
+            debug("BELL\n");
             continue;
         }
 
         if (ch == LINEFEED) {
-            #ifdef DEBUG
-            printf("\\n\n");
-            #endif
+            debug("\\n\n");
             if (m->autonewline) minal_carriageret(m);
             minal_linefeed(m);
             continue;
         }
 
         if (ch == CARRIAGERET) {
-            #ifdef DEBUG
-            printf("\\r\n");
-            #endif
+            debug("\\r\n");
             minal_carriageret(m);
             continue;
         }
 
         if (ch == DEL) {
-            #ifdef DEBUG
-            printf("DEL\n");
-            #endif
+            debug("DEL\n");
         }
 
         if (ch == BACKSPACE) {
-            #ifdef DEBUG
-            printf("BACKSPACE\n");
-            #endif
+            debug("BACKSPACE\n");
 
             if (x == 0 && m->cursor.row == 0) continue;
 
@@ -1510,7 +1563,7 @@ void minal_receiver(Minal* m)
             minal_parse_ansi(m, &view);
 
         #ifdef DEBUG
-            printf("ESC ");
+            debug("ESC ");
             size_t n = before.len - view.len;
             for (size_t i = 0; i < n; ++i) {
                 uint8_t ch = before.data[i];
@@ -1569,8 +1622,10 @@ void minal_transmitter(Minal* m, SDL_Event* event)
         char code[10];
         size_t n = SDLKeyboardEvent_to_ansicode(m, event->key, code);
         if (n == 0) return;
+        #ifdef DEBUG_KEYS
         if (isprint(*code)) printf("[TRANSMITTER] code = '%s'\n", code);
         else                printf("[TRANSMITTER] code = '0x%02X'\n", *code);
+        #endif
         minal_write_str(m, code);
     }
 
@@ -1667,17 +1722,18 @@ void minal_render_text(Minal* m)
         x = 0;
         for (size_t col = 0; col < m->config.n_cols; ++col) {
             Style style = m->lines.items[m->row_offset + row].items[col].style;
+
             SDL_FRect bg = {
                 .x = x,
                 .y = y,
                 .w = m->config.cell_width,
                 .h = m->config.cell_height,
             };
-            SDL_SetRenderDrawColor(m->rend, style.bg_color.r, style.bg_color.g, style.bg_color.b, style.bg_color.a);
             if (col != m->cursor.col && row != m->cursor.row) {
+                SDL_SetRenderDrawColor(m->rend, style.bg_color.r, style.bg_color.g, style.bg_color.b, style.bg_color.a);
                 SDL_RenderFillRect(m->rend, &bg);
-            } else {
             }
+                
 
             if (l.len == 0) {
                 x += m->config.cell_width;
@@ -1691,40 +1747,24 @@ void minal_render_text(Minal* m)
             l.len  -= len;
 
             SDL_Color fg;
-            if (col == m->cursor.col && row == m->cursor.row) {
-                fg = style.bg_color;
-            } else {
-                fg = style.fg_color;
-            }
+            if (col == m->cursor.col && row == m->cursor.row) fg = style.bg_color;
+            else                                              fg = style.fg_color;
 
-            if (style.faint) {
-                fg.a /= 2;
-            }
+            if (style.faint) fg.a /= 2;
 
-            if (style.hidden) {
-                fg.a = 0;
-            } else if (style.blink) {
-                fg.a *= blink;
-            } else if (style.fastblink) {
-                fg.a *= fastblink;
-            }
+            if      (style.hidden)    fg.a = 0;
+            else if (style.blink)     fg.a *= blink;
+            else if (style.fastblink) fg.a *= fastblink;
+
+            int stylemask = 0;
+            if (style.italic)    stylemask |= TTF_STYLE_ITALIC;
+            if (style.bold)      stylemask |= TTF_STYLE_BOLD;
+            if (style.underline) stylemask |= TTF_STYLE_UNDERLINE;
+            if (style.crossout)  stylemask |= TTF_STYLE_STRIKETHROUGH;
+            TTF_SetFontStyle(m->config.font, stylemask);
 
             TTF_SetTextColor(m->text, fg.r, fg.g, fg.b, fg.a);
             TTF_DrawRendererText(m->text, x, y);
-
-
-            if (style.underline) {
-                style.ul_color.a = fg.a;
-                TTF_SetTextColor(m->text, style.ul_color.r, style.ul_color.g, style.ul_color.b, style.ul_color.a);
-                TTF_SetTextString(m->text, "_", 1);
-                TTF_DrawRendererText(m->text, x, y);
-            } else if (style.doubleunder) {
-                style.ul_color.a = fg.a;
-                TTF_SetTextColor(m->text, style.ul_color.r, style.ul_color.g, style.ul_color.b, style.ul_color.a);
-                TTF_SetTextString(m->text, "\xE2\x80\x97", 1);
-                TTF_DrawRendererText(m->text, x, y);
-            }
-
             x += m->config.cell_width;
         }
         TTF_SetTextString(m->text, "\n", 1);

@@ -151,8 +151,8 @@ SOFTWARE.
 #define G0CHSET_DUTCH               '4'    //    ESC DESIGNATE_G0_CHARSET 4               | Dutch, VT200.
 #define G0CHSET_SWISS               '='    //    ESC DESIGNATE_G0_CHARSET =               | Swiss, VT200.
 #define G0CHSET_NORWEGIAN_DANISH_1  '`'    //    ESC DESIGNATE_G0_CHARSET `               | Norwegian/Danish, VT200.
-#define G0CHSET_NORWEGIAN_DANISH_2  'E',   //    ESC DESIGNATE_G0_CHARSET E               | Norwegian/Danish, VT200.
-#define G0CHSET_NORWEGIAN_DANISH_3  '6',   //    ESC DESIGNATE_G0_CHARSET 6               | Norwegian/Danish, VT200.
+#define G0CHSET_NORWEGIAN_DANISH_2  'E'    //    ESC DESIGNATE_G0_CHARSET E               | Norwegian/Danish, VT200.
+#define G0CHSET_NORWEGIAN_DANISH_3  '6'    //    ESC DESIGNATE_G0_CHARSET 6               | Norwegian/Danish, VT200.
 #define G0CHSET_DEC_SPECIAL         '0'    //    ESC DESIGNATE_G0_CHARSET 0               | DEC Special Character and Line Drawing Set, VT100.
 #define G0CHSET_SUPPLEMENTAL        '<'    //    ESC DESIGNATE_G0_CHARSET <               | DEC Supplemental, VT200.
 #define G0CHSET_USER_PREFERRED      '<'    //    ESC DESIGNATE_G0_CHARSET <               | User Preferred Selection Set, VT300.
