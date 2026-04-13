@@ -26,7 +26,7 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-// #define DEBUG true
+#define DEBUG true
 // #define DUMP_BUFFER true
 
 #include "convert.h"
@@ -149,11 +149,6 @@ typedef struct {
     size_t cap;
 } Lines;
 
-typedef enum {
-    KEYPAD_NORMAL_MODE,
-    KEYPAD_APPLICATION_MODE,
-} KeypadMode;
-
 typedef struct {
     Lines           lines;
     StringBuilder   screen;
@@ -180,9 +175,11 @@ typedef struct {
     int             slave_fd;
     int             master_fd;
 
-    bool            bracket_mode;
+    bool            bracketed_paste;
     bool            autowrap;
-    KeypadMode      keypad_mode;
+    bool            autonewline;
+    bool            keypad_application;
+    bool            cursor_application;
 } Minal;
 
 // basic stuff
@@ -236,7 +233,7 @@ size_t      screen_col2idx(StringView* l, size_t col);
 size_t      screen_getline(StringView l, size_t index);
 
 // helpers
-size_t      SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char* out);
+size_t      SDLKeyboardEvent_to_ansicode(Minal* m, SDL_KeyboardEvent ev, char out[10]);
 bool        is_utf8_head(uint8_t ch);
 size_t      utf8_chrlen(char ch);
 

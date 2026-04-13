@@ -1,4 +1,5 @@
 #include "minal.h"
+#include <SDL3/SDL_render.h>
 
 #define MOD(a, b) ((((a) % (b)) + (b)) % (b))
 
@@ -42,7 +43,7 @@ void minal_spawn_shell(Minal *m)
         setenv("SHELL", path, true);
 
         // setenv("TERM", "vt100", true);
-        // setenv("TERM", "xterm", true);
+        setenv("TERM", "xterm", true);
         // setenv("TERM", "dumb", true);
 
         // setenv("PS1",  "\e[32m\xE2\x86\x92\e[m ", true);
@@ -148,6 +149,7 @@ Minal minal_init()
 
     m.rend = SDL_CreateRenderer(m.window, NULL);
     assert(m.rend != NULL);
+    assert(SDL_SetRenderVSync(m.rend, SDL_RENDERER_VSYNC_ADAPTIVE));
 
     m.text_engine = TTF_CreateRendererTextEngine(m.rend);
     assert(m.text_engine != NULL);
@@ -175,6 +177,10 @@ Minal minal_init()
     };
 
     m.autowrap = true;
+    m.keypad_application = false;
+    m.cursor_application = false;
+    m.autonewline       = true;
+    m.bracketed_paste    = false;
 
     assert(SDL_StartTextInput(m.window));
     return m;
@@ -351,7 +357,7 @@ void minal_parse_ansi_osc(Minal* m, StringView* bytes)
         case STP_SET_ICON_LABEL: {
             printf("TODO: STP_SET_ICON_LABEL\n");
         }; break;
-        case STP_TODO_FIGURE_THIS_OUT: {
+        case STP_SET_CUR_WORKING_DIR: {
             printf("TODO: ESC OSC 7; <t> ST => WHAT THE F IS ?THIS MA?N?????\n");
         }; break;
         default: printf("UNKNOWN OSC COMMAND: %08b | %02X (%c)\n", b, b, b); break;
@@ -446,13 +452,13 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
             b = sv_chop_left(bytes);
 
             switch (opt) {
-                case DECSET_APPLICATION_CURSOR_KEYS:    { printf("TODO: DECSET_APPLICATION_CURSOR_KEYS\n"); } break;    
+                case DECSET_APPLICATION_CURSOR_KEYS:    { m->cursor_application = b == 'h'; } break;
                 case DECSET_DESIGNATE_USASCII_G0_TO_G3: { printf("TODO: DECSET_DESIGNATE_USASCII_G0_TO_G3\n"); } break; 
                 case DECSET_COLUMN_MODE:                { printf("TODO: DECSET_COLUMN_MODE\n"); } break;                
                 case DECSET_SMOOTH_SCROLL:              { printf("TODO: DECSET_SMOOTH_SCROLL\n"); } break;              
                 case DECSET_REVERSE_VIDEO:              { printf("TODO: DECSET_REVERSE_VIDEO\n"); } break;              
                 case DECSET_ORIGIN_MODE:                { printf("TODO: DECSET_ORIGIN_MODE\n"); } break;                
-                case DECSET_AUTO_WRAP_MODE:             { m->autowrap = b == 'h'; } break;             
+                case DECSET_AUTO_WRAP_MODE:             { m->autowrap = b == 'h'; } break;
                 case DECSET_AUTO_REPEAT_KEYS:           { printf("TODO: DECSET_AUTO_REPEAT_KEYS\n"); } break;           
                 case DECSET_SEND_MOUSE_X_Y_ON_BUTPRESS: { printf("TODO: DECSET_SEND_MOUSE_X_Y_ON_BUTPRESS\n"); } break; 
                 case DECSET_SHOW_TOOLBAR:               { printf("TODO: DECSET_SHOW_TOOLBAR\n"); } break;               
@@ -477,7 +483,7 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 // case DECSET_GRAP_PRINT_BG_MODE:         { printf("TODO: DECSET_GRAP_PRINT_BG_MODE\n"); } break;         
                 case DECSET_USE_ALTERNATE_SCREEN_BUF:   { printf("TODO: DECSET_USE_ALTERNATE_SCREEN_BUF\n"); } break;   
                 // case DECSET_ENB_GRAP_ROT_PRINT_MODE:    { printf("TODO: DECSET_ENB_GRAP_ROT_PRINT_MODE\n"); } break;    
-                case DECSET_APPLICATION_KEYPAD_MODE:    { printf("TODO: DECSET_APPLICATION_KEYPAD_MODE\n"); } break;    
+                case DECSET_APPLICATION_KEYPAD_MODE:    { m->keypad_application = b == 'h'; } break;    
                 case DECSET_BACKARROW_SENDS_BACKSPACE:  { printf("TODO: DECSET_BACKARROW_SENDS_BACKSPACE\n"); } break;  
                 case DECSET_LEFT_RIGHT_MARGIN_MODE:     { printf("TODO: DECSET_LEFT_RIGHT_MARGIN_MODE\n"); } break;     
                 case DECSET_ENB_SIXEL_DISPLAY_MODE:     { printf("TODO: DECSET_ENB_SIXEL_DISPLAY_MODE\n"); } break;     
@@ -519,7 +525,10 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 case DECSET_SET_READLINE_MOUSEBUT_1:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_1\n"); } break;    
                 case DECSET_SET_READLINE_MOUSEBUT_2:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_2\n"); } break;    
                 case DECSET_SET_READLINE_MOUSEBUT_3:    { printf("TODO: DECSET_SET_READLINE_MOUSEBUT_3\n"); } break;    
-                case DECSET_SET_BRACKETED_PASTE_MODE:   { printf("TODO: DECSET_PASTER_BRACKETED_MODE\n"); m->bracket_mode = b == 'h'; } break;   
+                case DECSET_SET_BRACKETED_PASTE_MODE:   { 
+                    // TODO: handle clipboard stuff
+                    printf("TODO: DECSET_SET_BRACKETED_PASTE_MODE\n"); m->bracketed_paste = b == 'h'; 
+                } break;   
                 case DECSET_ENB_READLINE_CHARQUOTE:     { printf("TODO: DECSET_ENB_READLINE_CHARQUOTE\n"); } break;     
                 case DECSET_ENB_READLINE_NEWLINE_PASTE: { printf("TODO: DECSET_ENB_READLINE_NEWLINE_PASTE\n"); } break; 
                 default: printf("UNKNOWN DECSET OP: %d\n", opt);
@@ -684,7 +693,15 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
 
         case SET_MODE: {
-			printf("TODO: CSI %c\n", SET_MODE);
+            // TODO: is there a default value for ESC CSI h?
+            if (argc < 1) break;
+            switch (argv[0]) {
+                case SET_MODE_KEYBOARD_ACTION: { printf("TODO: SET_MODE_KEYBOARD_ACTION\n"); }; break;
+                case SET_MODE_INSERT:          { printf("TODO: SET_MODE_INSERT\n"); }; break;
+                case SET_MODE_SEND_RECEIVE:    { printf("TODO: SET_MODE_SEND_RECEIVE\n"); }; break;
+                case SET_MODE_AUTO_NEWLINE:    { m->autonewline = true; }; break;
+                default:                         printf("UNKNOWN ARGUMENT FOR SET MODE: %d\n", argv[0]);
+            }
 		}; break;
             
         case MEDIA_COPY: {
@@ -692,7 +709,15 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
             
         case RESET_MODE: {
-			printf("TODO: CSI %c\n", RESET_MODE);
+            // TODO: is there a default value for ESC CSI l?
+            if (argc < 1) break;
+            switch (argv[0]) {
+                case RESET_MODE_KEYBOARD_ACTION: { printf("TODO: RESET_MODE_KEYBOARD_ACTION\n"); }; break;
+                case RESET_MODE_REPLACE:         { printf("TODO: RESET_MODE_INSERT\n"); }; break;
+                case RESET_MODE_SEND_RECEIVE:    { printf("TODO: RESET_MODE_SEND_RECEIVE\n"); }; break;
+                case RESET_MODE_NORMAL_LINEFEED: { m->autonewline = false; }; break;
+                default:                           printf("UNKNOWN ARGUMENT FOR RESET MODE: %d\n", argv[0]);
+            }
 		}; break;
 
         case SELECT_GRAPHIC_RENDITION: {
@@ -769,7 +794,7 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
         }
 
         case INDEX: {
-            printf("TODO: C1 CODE: INDEX\n");
+            if (m->cursor.row < m->config.n_rows) minal_cursor_move(m, m->cursor.col, m->cursor.row + 1);
             return;
         }
 
@@ -784,14 +809,12 @@ void minal_parse_ansi(Minal* m, StringView* bytes)
         }
 
         case DEC_KEYPAD_APPLICATION_MODE: {
-            printf("TODO: KEYPAD_APPLICATION_MODE\n");
-            m->keypad_mode = KEYPAD_APPLICATION_MODE;
+            m->keypad_application = true;
             return;
         }
 
         case DEC_KEYPAD_NORMAL_MODE: {
-            printf("TODO: KEYPAD_NORMAL_MODE\n");
-            m->keypad_mode = KEYPAD_NORMAL_MODE;
+            m->keypad_application = false;
             return;
         }
 
@@ -926,7 +949,7 @@ SDL_Color minal_select_color_by_index(Minal* m, int idx)
     idx -= 16;
     int red   = idx / (6 * 6) % 6;
     int green = idx / (6    ) % 6;
-    int blue  = idx % (6    ) % 6;
+    int blue  = idx / (1    ) % 6;
     clr = (SDL_Color){
         .r = red   != 0 ? 55 + 40 * red   : 0,
         .g = green != 0 ? 55 + 40 * green : 0,
@@ -1533,16 +1556,11 @@ void minal_transmitter(Minal* m, SDL_Event* event)
     }
 
     if (event->type == SDL_EVENT_KEY_DOWN) {
-        if (event->key.key == SDLK_ESCAPE) {
-            m->run = false;
-            return;
-        }
-    }
-
-    if (event->type == SDL_EVENT_KEY_DOWN) {
         char code[10];
-        size_t n = SDLKeyboardEvent_to_ansicode(event->key, code);
+        size_t n = SDLKeyboardEvent_to_ansicode(m, event->key, code);
         if (n == 0) return;
+        if (isprint(*code)) printf("[TRANSMITTER] code = '%s'\n", code);
+        else                printf("[TRANSMITTER] code = '0x%02X'\n", *code);
         minal_write_str(m, code);
     }
 
@@ -1646,8 +1664,10 @@ void minal_render_text(Minal* m)
                 .h = m->config.cell_height,
             };
             SDL_SetRenderDrawColor(m->rend, style.bg_color.r, style.bg_color.g, style.bg_color.b, style.bg_color.a);
-            if (col != m->cursor.col && row != m->cursor.row) 
+            if (col != m->cursor.col && row != m->cursor.row) {
                 SDL_RenderFillRect(m->rend, &bg);
+            } else {
+            }
 
             if (l.len == 0) {
                 x += m->config.cell_width;
@@ -1716,6 +1736,8 @@ void minal_render_cursor(Minal* m)
 void minal_run(Minal* m)
 {
     while (m->run) {
+        int start = SDL_GetTicks();
+
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             minal_transmitter(m, &event);
@@ -1750,9 +1772,11 @@ void minal_run(Minal* m)
             TTF_DrawRendererText(m->text, 10, 10);
         }
         SDL_RenderPresent(m->rend);
-        SDL_Delay(1000 / FPS);
-
         minal_check_shell(m);
+
+        int elapsed = SDL_GetTicks() - start;
+        int max_delay = 1000 / FPS;
+        if (elapsed < max_delay) SDL_Delay(max_delay - elapsed);
     }
 }
 
@@ -1809,7 +1833,7 @@ int main(void)
     return 0;
 }
 
-size_t SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char out[10])
+size_t SDLKeyboardEvent_to_ansicode(Minal* m, SDL_KeyboardEvent ev, char out[10])
 {
     SDL_Keycode k = ev.key;
     size_t n = 0;
@@ -1882,12 +1906,12 @@ size_t SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char out[10])
             // case SDLK_F1:          out = "𒀀"; n = strlen("𒀀"); break;// multibyte char for testing
 
             case SDLK_BACKSPACE:   out[n++] = BACKSPACE; break;
-            case SDLK_RETURN:      out[n++] = LINEFEED; break;
             case SDLK_TAB:         out[n++] = TAB; break;
-            case SDLK_UP:          out[n++] = ESC; out[n++] = '['; out[n++] = 'A'; break;
-            case SDLK_DOWN:        out[n++] = ESC; out[n++] = '['; out[n++] = 'B'; break;
-            case SDLK_RIGHT:       out[n++] = ESC; out[n++] = '['; out[n++] = 'C'; break;
-            case SDLK_LEFT:        out[n++] = ESC; out[n++] = '['; out[n++] = 'D'; break;
+            case SDLK_RETURN:      out[n++] = CARRIAGERET; if (m->autonewline) out[n++] = LINEFEED; break;
+            case SDLK_UP:          out[n++] = ESC; out[n++] = m->cursor_application ? '[' : 'O'; out[n++] = 'A'; break; 
+            case SDLK_DOWN:        out[n++] = ESC; out[n++] = m->cursor_application ? '[' : 'O'; out[n++] = 'B'; break;
+            case SDLK_RIGHT:       out[n++] = ESC; out[n++] = m->cursor_application ? '[' : 'O'; out[n++] = 'C'; break; 
+            case SDLK_LEFT:        out[n++] = ESC; out[n++] = m->cursor_application ? '[' : 'O'; out[n++] = 'D'; break; 
             case SDLK_HOME:        out[n++] = ESC; out[n++] = '['; out[n++] = '1'; out[n++] = '~'; break;
             case SDLK_INSERT:      out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '~'; break;
             case SDLK_DELETE:      out[n++] = ESC; out[n++] = '['; out[n++] = '3'; out[n++] = '~'; break;
@@ -1906,6 +1930,30 @@ size_t SDLKeyboardEvent_to_ansicode(SDL_KeyboardEvent ev, char out[10])
             case SDLK_F10:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '1';  out[n++] = '~'; break;
             case SDLK_F11:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '3';  out[n++] = '~'; break;
             case SDLK_F12:         out[n++] = ESC; out[n++] = '['; out[n++] = '2'; out[n++] = '4';  out[n++] = '~'; break;
+            case SDLK_KP_DIVIDE:   out[n++] = '/'; break;
+            case SDLK_KP_MULTIPLY: out[n++] = '*'; break;
+            case SDLK_KP_EQUALS:   out[n++] = '='; break;
+            case SDLK_KP_PLUS:     out[n++] = '+'; break;
+            case SDLK_KP_COMMA:    if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'l'; } else { out[n++] = ','; } break;
+            case SDLK_KP_MINUS:    if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'm'; } else { out[n++] = '-'; } break;
+            case SDLK_KP_PERIOD:   if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'n'; } else { out[n++] = '.'; } break;
+            case SDLK_KP_0:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'p'; } else { out[n++] = '0'; } break;
+            case SDLK_KP_1:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'q'; } else { out[n++] = '1'; } break;
+            case SDLK_KP_2:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'r'; } else { out[n++] = '2'; } break;
+            case SDLK_KP_3:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 's'; } else { out[n++] = '3'; } break;
+            case SDLK_KP_4:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 't'; } else { out[n++] = '4'; } break;
+            case SDLK_KP_5:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'u'; } else { out[n++] = '5'; } break;
+            case SDLK_KP_6:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'v'; } else { out[n++] = '6'; } break;
+            case SDLK_KP_7:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'w'; } else { out[n++] = '7'; } break;
+            case SDLK_KP_8:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'x'; } else { out[n++] = '8'; } break;
+            case SDLK_KP_9:        if (m->keypad_application) { out[n++] = ESC; out[n++] = 'O'; out[n++] = 'y'; } else { out[n++] = '9'; } break;
+            case SDLK_KP_ENTER:    {
+                if (m->keypad_application) {
+                    out[n++] = ESC; out[n++] = 'O'; out[n++] = 'M';
+                } else {
+                    out[n++] = CARRIAGERET; if (m->autonewline) out[n++] = LINEFEED; 
+                }
+            } break;
         }
     } 
     out[n] = '\0';

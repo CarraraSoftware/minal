@@ -1069,7 +1069,9 @@ SOFTWARE.
 #define STP_COLOR_NUMBER            4         // ESC OSC  4  ;  c  ; spec                 | Change Color Number c to the color specified by spec.
 #define STP_SPECIAL_COLOR_NUMBER    5         // ESC OSC  5  ;  c  ; spec                 | Change Special Color Number c to the color specified by spec.
 #define STP_TOGGLE_SPECIAL_CLRNUM   6         // ESC OSC  6  ;  c  ; f                    | Enable/disable Special Color Number c.
-#define STP_TODO_FIGURE_THIS_OUT    7         // ESC OSC  7  ; <t> ST                     | Zsh uses this shit. I don't know what it is.
+#define STP_SET_CUR_WORKING_DIR     7         // ESC OSC  7  ; <t> ST                     | Updates current working directory. (According to foot source code: https://codeberg.org/dnkl/foot/src/branch/master/osc.c#L1372)
+#define STP_URI                     8         // ESC OSC  8  ; <t> ST                     | URI. (According to foot source code: https://codeberg.org/dnkl/foot/src/branch/master/osc.c#L1372)
+#define STP_ITERM2_GROWL_NOTIF      9         // ESC OSC  9  ; <t> ST                     | iTerm2 Growl Notifications. (According to foot source code: https://codeberg.org/dnkl/foot/src/branch/master/osc.c#L1381)
 #define STP_VT100_FG_COLOR          10        // ESC OSC  10 ; <t> ST                     | Change VT100 text foreground color to Pt.
 #define STP_VT100_BG_COLOR          11        // ESC OSC  11 ; <t> ST                     | Change VT100 text background color to Pt.
 #define STP_TEXT_CURSOR_COLOR       12        // ESC OSC  12 ; <t> ST                     | Change text cursor color to Pt.
