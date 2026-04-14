@@ -27,16 +27,16 @@
 #include <SDL3/SDL_timer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 
-#define DEBUG true
+// #define DEBUG true
 // #define DUMP_BUFFER true
-
-#include "convert.h"
 
 #define _32K 32678
 #define CARR_SB_INIT_CAP _32K
 #define CARR_SV_IMPLEMENTATION
 #include "carrlib/sv.h"
 #include "carrlib/vec.h"
+#define CARR_UNICODE_IMPLEMENTATION
+#include "carrlib/unicode.h"
 #include "ansi.h"
 
 // #define FONT_FILE           "resources/font.ttf"
@@ -89,10 +89,10 @@
 #define FONT_FILE_5         "/usr/share/fonts/gnu-free/FreeSerif.otf"
 #define FONT_FILE_6         "/usr/share/fonts/Adwaita/AdwaitaSans-Regular.ttf"
 
-#define DEFAULT_FONT_SIZE   14.0f
+#define DEFAULT_FONT_SIZE   18.0f
 #define DEFAULT_DISPLAY_DPI 96
-#define DEFAULT_N_COLS      165
-#define DEFAULT_N_ROWS      38
+#define DEFAULT_N_COLS      90
+#define DEFAULT_N_ROWS      30
 
 #define FPS    144
 

@@ -2,26 +2,6 @@
 
 #define MOD(a, b) ((((a) % (b)) + (b)) % (b))
 
-bool is_utf8_head(uint8_t ch)
-{
-    return ((ch >> 7) & 1) == 1 &&
-            (ch >> 6)  != 0b10;
-}
-
-size_t utf8_chrlen(char ch)
-{
-    uint8_t b = (uint8_t)ch;
-    size_t size = 0;
-    for (size_t i = 0; i < 4; i++) {
-        if ((b >> (7 - i) & 1) == 1) {
-            size += 1;
-        } else {
-            break;
-        }
-    }
-    return size == 0 ? 1 : size;
-}
-
 void minal_spawn_shell(Minal *m) 
 {
     int master_fd;
@@ -603,7 +583,6 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
         case CURSOR_POSITION: {
             int opt1 = argc > 0 ? argv[0] : 1;
             int opt2 = argc > 1 ? argv[1] : 1;
-            printf("ESC CSI H => CURSOR POSITION: { %d, %d }\n", opt1, opt2);
 
             size_t new_row = MIN(MAX(0, opt1 - 1), m->config.n_rows - 1);
             size_t new_col = MIN(MAX(0, opt2 - 1), m->config.n_cols - 1);
@@ -1579,19 +1558,10 @@ void minal_receiver(Minal* m)
             continue;
         }
 
-        int err;
         uint32_t content;
-        //TODO: remove dependency on convert.h
-        int n = c_utf8_buf_to_utf32_char_b(&content, view.data - 1, &err);
+        int n = utf8_to_utf32((uint8_t*)view.data - 1, &content);
         view.data += n - 1;
         view.len  -= n - 1;
-        if (err) {
-            printf("Failed to convert UTF-8=>UTF-32: %u (n = %d)\n", content, n);
-            for (int i = n - 1; i >= 0; --i) {
-                printf("%02X ", *(uint8_t*)(view.data - i));
-            }
-            printf("\n");
-        }
 
         Cell cell = (Cell) {
             .content = content,
@@ -1684,10 +1654,10 @@ void minal_render_text(Minal* m)
 
     for (size_t row = row_start; row <= m->row_offset + m->reg_bot; row++) {
         Line l = m->lines.items[row];
-        char utf8buf[5];
+        uint8_t utf8buf[5];
         for (size_t col = 0; col < l.len; ++col) {
-            int len = c_utf32_char_to_utf8_buf(utf8buf, utf8buf + 5, l.items[col].content);
-            sb_nconcat(&m->screen, utf8buf, len);
+            int len = utf32_to_utf8(l.items[col].content, utf8buf);
+            sb_nconcat(&m->screen, (char*)utf8buf, len);
 #ifdef DUMP_BUFFER
             char toprint[6];
             int n;
@@ -1742,7 +1712,7 @@ void minal_render_text(Minal* m)
             }
 
             uint8_t byte = sv_first(&l);    
-            size_t len = utf8_chrlen(byte);
+            size_t len = utf8_len(byte);
             TTF_SetTextString(m->text, (char*)l.data, len);
             l.data += len;
             l.len  -= len;

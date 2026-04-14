@@ -52,3 +52,9 @@
 
 - ZSH:
     - [Stack Exchange - zsh's PROMPT_EOL_MARK](https://unix.stackexchange.com/posts/302710/revisions)
+
+- Unicode:
+    - [JavaRevisited](https://javarevisited.blogspot.com/2015/02/difference-between-utf-8-utf-16-and-utf.html)
+    - [Joel On Software - The Bare Minimum](https://www.joelonsoftware.com/2003/10/08/the-absolute-minimum-every-software-developer-absolutely-positively-must-know-about-unicode-and-character-sets-no-excuses/)
+    - [The Unicode Standard](http://www.unicode.org/versions/Unicode9.0.0/ch03.pdf)
+    - [A very dull UTF32 to UTF8 converte](https://gist.github.com/Miouyouyou/864130e8734afe3f806512b14022226f)
