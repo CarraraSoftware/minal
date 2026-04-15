@@ -12,17 +12,30 @@
 # // prints escapes for whatever is on $TERM
 
 
-local t
-if [ $# -lt 1 ] ; then
-    t=$TERM;
-else
-    t=$1;
-fi
+getcodes() {
+    local t
+    if [ $# -lt 1 ] ; then
+        t=$TERM;
+    else
+        t=$1;
+    fi
+    codes=$(infocmp -1 -T $t| tail -n +3 | sed -E 's/\s*([^=^#]*).*,$/\1/g')
+    echo $codes
+}
 
-cmds=$(infocmp -1 -T $t| tail -n +3 | sed -E 's/\s*([^=^#]*).*,$/\1/g')
-echo "----------------- $t ----------------------"
-for cmd (${(f)cmds}); do
-    echo "$cmd: "
-    builtin echoti $cmd | xxd 
-    echo "---"
-done
+printcodes() {
+    local codes=$1
+    for code (${(f)codes}); do
+        echo "$code: "
+        builtin echoti $code | xxd 
+        echo "---"
+    done
+}
+
+main() {
+    local codes=$(getcodes)
+    printcodes $codes
+}
+
+getcodes $1
+# main $1
