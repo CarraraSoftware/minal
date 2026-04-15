@@ -19,6 +19,7 @@
     - [readline(3)](https://man7.org/linux/man-pages/man3/readline.3.html)
     - [console_codes(4)](https://man7.org/linux/man-pages/man4/console_codes.4.html)
     - [infocmp(1)](https://linux.die.net/man/1/infocmp)
+    - [terminfo(5)](https://man7.org/linux/man-pages/man5/terminfo.5.html)
 
 - General Explanations:
     - [The TTY Layer (Talk by Greg Kroah-Hartman)](https://www.youtube.com/watch?v=g4sZUBS57OQ)
