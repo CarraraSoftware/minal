@@ -43,7 +43,7 @@
 #define DEBUG_TRANSMITTER  (1 << 3)
 #define DEBUG_ESCAPES      (1 << 4)
 // #define DEBUG (DEBUG_REGION | DEBUG_ESCAPES)
-#define DEBUG (DEBUG_ESCAPES)
+// #define DEBUG (DEBUG_ESCAPES)
 
 #define FONT_FILE              "resources/font.ttf"
 #define FALLBACK_1             "/usr/share/fonts/TTF/Hack-Bold.ttf"
@@ -216,8 +216,8 @@ Cell        minal_default_cell(Minal *m);
 // RENDER
 void        minal_render_cursor(Minal* m);
 void        minal_render_text(Minal* m);
-void        minal_render_region(Minal* m, Region region, uint8_t ticks);
-float       blink_ratio(uint64_t secs, float freq);
+void        minal_render_region(Minal* m, Region region, double ticks);
+float       blink_ratio(double secs, double freq);
 
 
 // DEBUG

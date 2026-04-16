@@ -112,7 +112,7 @@ Minal minal_init()
     minal_spawn_shell(&m);
     m.run = true;
 
-    char* font1 = minal_request_font("ProFont IIx Nerd Font Propo");
+    char* font1 = minal_request_font("HurmitNerdFont");
     char* font2 = minal_request_font("Hack Nerd Font");
     char* font3 = minal_request_font("FreeSerif");
 
@@ -129,8 +129,8 @@ Minal minal_init()
     // assert(fallback3 && "Could not load fallback3 font");
     //
     // TTF_AddFallbackFont(m.config.font, fallback3);
-    TTF_AddFallbackFont(m.config.font, fallback2);
     TTF_AddFallbackFont(m.config.font, fallback1);
+    TTF_AddFallbackFont(m.config.font, fallback2);
 
     assert(TTF_SetFontSizeDPI(m.config.font, m.config.font_size, m.config.display_dpi, m.config.display_dpi));
 
@@ -290,7 +290,6 @@ void minal_finish(Minal *m)
 void minal_run(Minal* m)
 {
     while (m->run) {
-        int start = SDL_GetTicks();
 
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -306,10 +305,6 @@ void minal_run(Minal* m)
 
         SDL_RenderPresent(m->rend);
         minal_check_shell(m);
-
-        int elapsed = SDL_GetTicks() - start;
-        int max_delay = 1000 / FPS;
-        if (elapsed < max_delay) SDL_Delay(max_delay - elapsed);
     }
 }
 
@@ -1918,7 +1913,7 @@ void minal_render_cursor(Minal* m)
 
 void minal_render_text(Minal* m)
 {
-    uint8_t tick_secs = SDL_GetTicks() / 1000;
+    double tick_secs = SDL_GetTicks() / 1000.0;
     TTF_SetTextString(m->text, "", 0);
 
     minal_render_region(m, m->above_reg,  tick_secs);
@@ -1929,9 +1924,9 @@ void minal_render_text(Minal* m)
     m->lastframe_offset = m->row_offset;
 }
 
-void minal_render_region(Minal* m, Region region, uint8_t ticks)
+void minal_render_region(Minal* m, Region region, double ticks)
 {
-    float blink = blink_ratio(ticks, 10.0);
+    double blink = blink_ratio(ticks, 10.0);
     float fastblink = blink_ratio(ticks, 20.0);
     float x = 0;
     float y0;
@@ -2011,23 +2006,26 @@ void minal_render_region(Minal* m, Region region, uint8_t ticks)
             if (style.underline) stylemask |= TTF_STYLE_UNDERLINE;
             if (style.crossout)  stylemask |= TTF_STYLE_STRIKETHROUGH;
             TTF_SetFontStyle(m->config.font, stylemask);
+
+            int text_w;
+            TTF_GetTextSize(m->text, &text_w, NULL);
+            float d_x = (text_w - m->config.cell_width) / 2.;
+
             TTF_SetTextColor(m->text, fg.r, fg.g, fg.b, fg.a);
-            TTF_DrawRendererText(m->text, x, y);
+            TTF_DrawRendererText(m->text, x - d_x, y);
             x += m->config.cell_width;
         }
-        TTF_SetTextString(m->text, "\n", 1);
-        TTF_DrawRendererText(m->text, x, y);
         y += m->config.cell_height;
     }
 
     debug_region(m, y0, y);
 }
 
-float blink_ratio(uint64_t secs, float freq) 
+float blink_ratio(double secs, double freq) 
 {
-    float angle = freq * secs;
-    float sine = sinf(angle);
-    return  0.5 + 0.5 * ((sine + 1.0f) / 2.0f);
+    double angle = freq * secs;
+    double sine = sin(angle);
+    return  (float) ( 0.25 + 0.75 * ((sine + 1.0) / 2.0) );
 }
 
 
