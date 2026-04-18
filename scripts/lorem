@@ -1,0 +1,24 @@
+#! /usr/bin/bash
+echo -n "01) Lorem ipsum, dolor sit amet consectetur adipisicing elit.
+02) Perferendis, excepturi numquam labore corrupti veritatis omnis. 
+03) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+04) Libero eum nobis nihil voluptas impedit recusandae?
+05) Lorem ipsum, dolor sit amet consectetur adipisicing elit. 
+06) Perferendis, excepturi numquam labore corrupti veritatis omnis. 
+07) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+08) Lorem ipsum, dolor sit amet consectetur adipisicing elit. 
+09) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+10) Libero eum nobis nihil voluptas impedit recusandae?
+11) Lorem ipsum, dolor sit amet consectetur adipisicing elit. 
+12) Perferendis, excepturi numquam labore corrupti veritatis omnis. 
+13) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+14) Libero eum nobis nihil voluptas impedit recusandae?
+15) Lorem ipsum, dolor sit amet consectetur adipisicing elit. 
+16) Perferendis, excepturi numquam labore corrupti veritatis omnis. 
+17) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+18) Libero eum nobis nihil voluptas impedit recusandae?
+20) Lorem ipsum, dolor sit amet consectetur adipisicing elit. 
+21) Perferendis, excepturi numquam labore corrupti veritatis omnis. 
+22) Dolorum corporis ullam itaque illum, deserunt reiciendis possimus. 
+23) Libero eum nobis nihil voluptas impedit recusandae?
+24) Lorem ipsum, dolor sit amet consectetur adipisicing elit."

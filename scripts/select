@@ -1,0 +1,4 @@
+#! /usr/bin/bash
+
+opt=$1:-1
+echo -ne "\e[H"

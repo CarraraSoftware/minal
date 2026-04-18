@@ -37,5 +37,5 @@ main() {
     printcodes $codes
 }
 
-getcodes $1
-# main $1
+# getcodes $1
+main $1

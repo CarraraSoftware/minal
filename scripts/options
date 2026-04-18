@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+
+echo -ne "\e[s"
+
+
+option() {
+    local n=$1
+    local selected=$2
+    if test $n -eq $selected; then
+        echo -ne "\e[42m"
+    else
+        echo -ne "\e[0m"
+    fi
+    echo -ne "OPÇÃO $n    "
+}
+
+if [ $# -lt 1 ] ; then
+    opt=-1;
+else
+    opt=$1;
+fi
+
+echo -ne "\e[H"
+echo -ne "Este é apenas um promptzão bem feio, para testes. >"
+echo -ne $opt
+
+echo -ne "\r\n\e[K"
+for i in {1..3}; do
+   option $i $opt
+done
+echo -ne "\e[0m"
+echo -ne "\r\n\e[K"
+for i in {4..6}; do
+   option $i $opt
+done
+
+echo -ne "\e[u"
+
+
+

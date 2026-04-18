@@ -18,7 +18,6 @@ int main(void)
 Minal minal_init()
 {
     Minal m = {0};
-
     SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS);
     assert(TTF_Init());
 
@@ -39,8 +38,8 @@ Minal minal_init()
         .absolute = true,
     };
     m.below_reg = (Region){
-        .start    = m.config.n_rows - 1,
-        .end      = m.config.n_rows - 1,
+        .start    = m.config.n_rows,
+        .end      = m.config.n_rows,
         .absolute = true,
     };
 
@@ -124,18 +123,7 @@ void minal_spawn_shell(Minal *m)
         if (defaultshell != NULL)
             path = defaultshell;
         setenv("SHELL", path, true);
-
-        // setenv("TERM", "minal-256color", true);
-        // setenv("TERM", "vt100", true);
-        // setenv("TERM", "xterm", true);
-        // setenv("TERM", "dumb", true);
         setenv("TERM", "st-256color", true);
-
-        // setenv("PS1",  "\e[32m\xE2\x86\x92\e[m ", true);
-        // setenv("PROMPT",  "\e[32m\xE2\x86\x92\e[m ", true);
-        // setenv("PS1", "➜ ", true);
-        // setenv("PS1",  "\e[32m\xE2\x9E\x9C\e[m ", true);
-        // setenv("PS1",  "$ ", true);
 
         char cols[10]; sprintf(cols, "%d", m->config.n_cols);
         char rows[10]; sprintf(rows, "%d", m->config.n_rows);
@@ -651,7 +639,9 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 case DECSET_XOR_BLINKING_CURSOR:        { printf("TODO: DECSET_XOR_BLINKING_CURSOR\n"); } break;        
                 case DECSET_PRINT_FORM_FEED:            { printf("TODO: DECSET_PRINT_FORM_FEED\n"); } break;            
                 case DECSET_SET_PRINT_EXT_FULLSCREEN:   { printf("TODO: DECSET_SET_PRINT_EXT_FULLSCREEN\n"); } break;   
-                case DECSET_SHOW_CURSOR:                { printf("TODO: DECSET_SHOW_CURSOR\n"); } break;                
+                case DECSET_SHOW_CURSOR:                { 
+                    m->cursor.hidden = !(b == 'h');
+                } break;
                 case DECSET_SHOW_SCROLLBAR:             { printf("TODO: DECSET_SHOW_SCROLLBAR\n"); } break;             
                 case DECSET_ENB_FONT_SHIFTING:          { printf("TODO: DECSET_ENB_FONT_SHIFTING\n"); } break;          
                 case DECSET_ENTER_TEKTRONIX_MODE:       { printf("TODO: DECSET_ENTER_TEKTRONIX_MODE\n"); } break;       
@@ -698,8 +688,13 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 case DECSET_EXTENDED_REVERSE_WRAP_MODE: { printf("TODO: DECSET_EXTENDED_REVERSE_WRAP_MODE\n"); } break; 
                 case DECSET_ENB_SWAP_ALT_SCREEN_BUF:    { printf("TODO: DECSET_ENB_SWAP_ALT_SCREEN_BUF\n"); } break;    
                 case DECSET_USE_ALT_SCREEN_BUFFER:      { printf("TODO: DECSET_USE_ALT_SCREEN_BUFFER\n"); } break;      
-                case DECSET_SAVE_CURSOR:                { printf("TODO: DECSET_SAVE_CURSOR\n"); } break;                
-                case DECSET_SAVE_CURSOR_2:              { printf("TODO: DECSET_SAVE_CURSOR_2\n"); } break;              
+
+                case DECSET_SAVE_CURSOR:
+                case DECSET_SAVE_CURSOR_2: { 
+                    if (b == 'h') m->saved_cursor = m->cursor;
+                    else          m->cursor = m->saved_cursor;
+                } break;
+
                 case DECSET_TERMINFOCAP_FNKEY_MODE:     { printf("TODO: DECSET_TERMINFOCAP_FNKEY_MODE\n"); } break;     
                 case DECSET_SET_SUN_FUNCKEY_MODE:       { printf("TODO: DECSET_SET_SUN_FUNCKEY_MODE\n"); } break;       
                 case DECSET_SET_HP_FUNCKEY_MODE:        { printf("TODO: DECSET_SET_HP_FUNCKEY_MODE\n"); } break;        
@@ -749,7 +744,12 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
                 printf(" ");
             }
             printf("WINDOW_MANIPULATION\n");
-        }; break;
+        } break;
+
+        case INSERT_BLANK_CHARS: {
+            int opt = argc > 0 ? argv[0] : 1;
+            minal_insert_chars(m, opt);
+        } break;
 
         case CURSOR_UP: {
             int opt = argc > 0 ? argv[0] : 1;
@@ -799,6 +799,12 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
             minal_cursor_move(m, new_col, m->cursor.row);
         }; break;
 
+        case CURSOR_HORIZONTAL_ABSOLUTE: {
+            int opt = argc > 0 ? argv[0] : 1;
+            size_t new_col = MIN(MAX(0, opt - 1), m->config.n_cols - 1);
+            minal_cursor_move(m, new_col, m->cursor.row);
+        }; break;
+
         case CURSOR_POSITION: {
             int opt1 = argc > 0 ? argv[0] : 1;
             int opt2 = argc > 1 ? argv[1] : 1;
@@ -819,11 +825,13 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
         }; break;
 
         case INSERT_LINES: {
-			printf("TODO: CSI %c\n", INSERT_LINES);
+            size_t opt = argc > 0 ? argv[0] : 1;
+            minal_insert_lines(m, opt);
 		}; break;
 
         case DELETE_LINES: {
-			printf("TODO: CSI %c\n", DELETE_LINES);
+            size_t opt = argc > 0 ? argv[0] : 1;
+            minal_delete_lines(m, opt);
 		}; break;
 
         case DELETE_CHARS: {
@@ -842,7 +850,8 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
         }; break;
 
         case ERASE_CHARS: {
-			printf("TODO: CSI %c\n", ERASE_CHARS);
+            size_t opt = argv > 0 ? argv[0] : 1;
+            minal_erase_chars(m, opt);
 		}; break;
 
         case BACKWARD_TAB: {
@@ -870,7 +879,9 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
 
         case LINE_POSITION_ABSOLUTE: {
-			printf("TODO: CSI %c\n", LINE_POSITION_ABSOLUTE);
+            int opt = argc > 0 ? argv[0] : 1;
+            size_t row = MAX(MIN(opt - 1, m->config.n_rows - 1), 0);
+            minal_cursor_move(m, m->cursor.col, row);
 		}; break;
 
         case LINE_POSITION_RELATIVE: {
@@ -886,7 +897,7 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
 		}; break;
 
         case SET_MODE: {
-            // TODO: is there a default value for ESC CSI h?
+            // NOTE: is there a default value for ESC CSI h?
             if (argc < 1) break;
             switch (argv[0]) {
                 case SET_MODE_KEYBOARD_ACTION: { printf("TODO: SET_MODE_KEYBOARD_ACTION\n"); }; break;
@@ -957,6 +968,7 @@ void minal_parse_ansi_csi(Minal* m, StringView* bytes)
     return;
 }
 
+static size_t counter = 0;
 void minal_erase_in_line(Minal* m, size_t opt)
 //////////////////////////////////////////////
 //  X = cursor.col                          //
@@ -995,20 +1007,26 @@ void minal_erase_in_line(Minal* m, size_t opt)
             end   = m->config.n_cols - 1;
         }; break;
 
-        case ERASE_IN_LINE_RIGHT:
-        default: {
+        case ERASE_IN_LINE_RIGHT: {
             start = x;
             end   = m->config.n_cols - 1;
         }; break;
+
+        default: {
+            printf("Invalid Opt For Erase In Line: %zu\n", opt);
+            exit(1);
+        }
     }
 
     if (start > end) return;
 
-    for (size_t i = start; i <= end; ++i) {
-        line->items[i] = (Cell) {
-            .content = ' ',
-            .style = m->cursor.style,
-        };
+    printf("---- ERASE IN LINE [%zu] ----\n", counter);
+    printf("  OPT: %zu\n", opt);
+    printf("    X: %zu,   Y: %zu\n", x, y);
+    printf("Start: %zu, End: %zu\n", start, end);
+    counter++;
+    for (size_t i = start; i <= end; ++i)  {
+        line->items[i] = minal_default_cell(m);
     }
 }
 
@@ -1021,7 +1039,7 @@ void minal_erase_in_display(Minal* m, size_t opt)
     size_t start;
     size_t end;
 
-    if (opt == ERASE_IN_DISPLAY_SAVED) {
+    if (opt >= ERASE_IN_DISPLAY_SAVED) {
         m->row_offset = 0;
 
         for (int i = 0; i < m->lines.len; ++i) {
@@ -1053,45 +1071,169 @@ void minal_erase_in_display(Minal* m, size_t opt)
         }; break;
     }
 
+    if (start > end) return;
+
     for (size_t row = start; row <= end; ++row) {
-        if (row == y) {
-            minal_cursor_move(m, x, row);
-            minal_erase_in_line(m, MIN(opt, ERASE_IN_LINE_ALL));
-        } else {
-            minal_cursor_move(m, 0, row);
-            minal_erase_in_line(m, ERASE_IN_LINE_ALL);
-        }
+        minal_cursor_move(m, x, row);
+        if (row == y) minal_erase_in_line(m, opt);
+        else          minal_erase_in_line(m, ERASE_IN_LINE_ALL);
     }
 
-    if (opt == ERASE_IN_DISPLAY_ALL) {
-        minal_cursor_move(m, 0, 0);
-    } else {
-        minal_cursor_move(m, x, y);
+    minal_cursor_move(m, x, y);
+}
+
+void minal_insert_lines(Minal* m, size_t n)                                         //   (ESC CSI L)                  
+{                                                                                   //   [  A ... ]    =>  [  A ... ]  0
+    size_t row = m->cursor.row;                                                     //   [  B ... ]    =>  [  B ... ]  1
+    if (row < m->scroll_reg.start || row >= m->scroll_reg.end) return;              //   [█ C ... ]    =>  [█       ]  2
+    size_t absrow = minal_cursor2absol(m);                                          //   [  D ... ]    =>  [  C ... ]  3 = len -  n  - 1
+                                                                                    //   [  E ... ]    =>  [  D ... ]  4    5  -  1  - 1 = 3
+    size_t len = m->scroll_reg.end - m->scroll_reg.start;                           //                                
+    n = MIN(n, len - row);                                                          //   (ESC CSI 2 L)                 
+    for (int r = m->row_offset + len - n; r >= (int)row; --r) {                     //   [  A ... ]    =>  [  A ... ]  0                     
+        Line src = m->lines.items[r];                                               //   [█ C ... ]    =>  [█       ]  2 = len -  n  - 1                         
+        Line *dst = &m->lines.items[r + n];                                         //   [  D ... ]    =>  [        ]  3    5  -  2  - 1 = 2  
+        for (size_t j = 0; j < src.len; j++)                                        //   [  E ... ]    =>  [  C ... ]  4 
+            dst->items[j] = src.items[j];                                           
+    }
+
+    for (size_t i = 0; i < n; ++i) 
+        for (size_t col = 0; col < m->config.n_cols; ++col)
+            m->lines.items[absrow + i].items[col] = minal_default_cell(m);
+}
+
+ //
+ //                                                                                                      
+ // REG   [AAAAAAAAA]                 =>   REG   [AAAAAAAAA]                                             
+ // ABOVE [AAAAAAAAA]                 =>   ABOVE [AAAAAAAAA]                                             
+ //       [AAAAAAAAA]                 =>         [AAAAAAAAA]                                             
+ //       -----------                 =>         -----------                                             
+ // REG   [_________]                 =>   REG   [_________]                                             
+ // SCRL  [_________]                 =>   SCRL  [_________]                                             
+ //       [XXXXXXXXX] |- row          =>         [.........]                                             
+ //       [XXXXXXXXX] |               =>         [.........]                                             
+ //       [XXXXXXXXX] |               =>         [.........]                                             
+ //       [XXXXXXXXX] |               =>         [.........]                                             
+ //       [XXXXXXXXX] |- row + n - 1  =>         [.........]                                             
+ //       [.........]                 =>         [OOOOOOOOO]                                             
+ //       [.........]                 =>         [OOOOOOOOO] - row + dif                                 
+ //       [.........]                 =>         [OOOOOOOOO]                                             
+ //       [.........]                 =>         [OOOOOOOOO]                                             
+ //       [.........]                 =>         [OOOOOOOOO] - scroll-reg.end - 1           
+ //       -----------                 =>         -----------                                             
+ // REG   [BBBBBBBBB] - bel.start     =>   REG   [BBBBBBBBB]                                             
+ // BELOW [BBBBBBBBB]                 =>   BELOW [BBBBBBBBB]                                             
+ //       [BBBBBBBBB] - fullen - 1    =>         [BBBBBBBBB]                                             
+void minal_delete_lines(Minal* m, size_t n)                                                
+{                                                                                          
+    size_t row = m->cursor.row;                                                            
+    if (row < m->scroll_reg.start || row >= m->scroll_reg.end) return;                     
+    size_t absrow = minal_cursor2absol(m);                                                 
+    size_t len = m->scroll_reg.end - m->scroll_reg.start;                                  
+                                                                                           
+    n = MIN(n, len - row - 1);                                                             
+    for (size_t i = absrow + n; i < m->row_offset + m->scroll_reg.end; ++i) {              
+        Line* dst = &m->lines.items[i - n];                                                
+        Line  src = m->lines.items[i];                                                    
+        for (size_t j = 0; j < m->config.n_cols; j++) {                                            
+            dst->items[j].content = src.items[j].content;                                 
+            dst->items[j].style   = src.items[j].style;                                     
+        }                                                                                  
+    }                                                                                      
+                                                                                           
+    for (size_t i = m->scroll_reg.end -  n - 1; i < m->scroll_reg.end; ++i) {                  
+        for (size_t col = 0; col < m->config.n_cols; ++col) {                              
+            m->lines.items[m->row_offset + i].items[col] = minal_default_cell(m);          
+        }                                                                                  
+    }                                                                                      
+}                                                                                          
+                                                                                           
+
+void minal_insert_chars(Minal* m, size_t n)
+{
+    // n = 1         n = 4
+    // [...CABCDEF]  [...CABCDEF]
+    // [...C ABCDE]  [...C    AB]
+
+    Line* line = &m->lines.items[minal_cursor2absol(m)];
+    size_t col = m->cursor.col;
+    n = MIN(n, m->config.n_cols - 1 - col);
+    size_t start = m->config.n_cols - 1 - n;
+    for (size_t c = start; c >= col; --c) {
+        Cell src = line->items[c];
+        Cell* dst = &line->items[c + n];
+        dst->content = src.content;
+        dst->style   = src.style;
+    }
+
+    for (size_t c = col; c < col + n; c++) {
+        line->items[c] = minal_default_cell(m);
     }
 }
 
-
-void minal_delete_chars(Minal* m, size_t n)
+void minal_delete_chars(Minal* m, size_t n)                                                
 {
-    size_t row = m->cursor.row;
+    size_t row = minal_cursor2absol(m);
+    Line* line = &m->lines.items[row];
     size_t col = m->cursor.col;
     size_t len = m->config.n_cols;
-    if (col >= len) {
-        return;
-    }
+    if (col >= len) return;
+
+    //
+    //  0                  col                      len - 1
+    //  v                  v                        v
+    // [##################|#########|@@@@@@@@@@@@@@@@]
+    //                    |_________|________________|
+    //                         V       V
+    //                         n       len - 1 - col - n
+    ////// MEMMOVE
     //  0                  col                    len - 1
     //  v                  v                      v
-    // [###########################################]
-    //                     |______________________|
-    //                                 V
-    //                          (len - 1) - (col) + 1 = len - col - 1 + 1 = len - col
+    // [##################|@@@@@@@@@@@@@@@@|********]
+    // |__________________|________________|________|
+    //         V                   V            V
+    //        col                  m            n
+    // col + m + n = len => m = len - col - n
 
     n = MIN(n, len - col);
-    Cell* dst = m->lines.items[row].items + col;
-    Cell* src =  dst + n;
-    if (col + n < len) {
-        size_t dif = len - (col + n);
-        memmove(dst, src, dif);
+    size_t start = col + n;
+    for (size_t c = start; c < len; ++c) {
+        Cell src = line->items[c];
+        Cell* dst = &line->items[c - n];
+        dst->content = src.content;
+        dst->style = src.style;
+    }
+     
+    for (size_t i = len - n; i < len; ++i)
+        line->items[i] = minal_default_cell(m);
+}
+
+void minal_erase_chars(Minal* m, size_t n)
+{
+    //  0                  col                    l - 1
+    //                      ______________________
+    //  v                  v                      v
+    // [###########################################]
+    //                     |_______|
+    //                         V    
+    //                         n    
+    //  ( (l - 1) - col ) + 1 = l - col - 1 + 1 = l - col
+    ////// ERASE
+    //  0                  col                    
+    //  v                  v                      
+    // [###################.........###############]
+    //                     |_______|
+    //                         V
+    //                         n
+    
+    size_t row = minal_cursor2absol(m);
+    size_t col = m->cursor.col;
+    if (col >= m->config.n_cols) return;
+
+    n = MIN(n, m->config.n_cols - col);
+    // c < cols
+    for (size_t c = col; c < col + n; c++) {
+        m->lines.items[row].items[c] = minal_default_cell(m);
     }
 }
 
@@ -1424,73 +1566,84 @@ size_t minal_keyboard_to_ansi(Minal* m, SDL_KeyboardEvent ev, char out[10])
     size_t n = 0;
     if (ev.mod & SDL_KMOD_CTRL) {
         switch (k) {
-             case SDLK_AT:           out[n++] = NULL_;                  break;
-             case SDLK_A:            out[n++] = START_OF_HEADING;       break;
-             case SDLK_B:            out[n++] = START_OF_TEXT;          break;
-             case SDLK_C:            out[n++] = END_OF_TEXT;            break;
-             case SDLK_D:            out[n++] = END_OF_TRANSMISSION;    break;
-             case SDLK_E:            out[n++] = ENQUIRY;                break;
-             case SDLK_F:            out[n++] = ACKNOWLEDGE;            break;
-             case SDLK_G:            out[n++] = BELL;                   break;
-             case SDLK_H:            out[n++] = BACKSPACE;              break;
-             case SDLK_I:            out[n++] = TAB;                    break;
-             case SDLK_J:            out[n++] = LINEFEED;               break;
-             case SDLK_K:            out[n++] = VERTTAB;                break;
-             case SDLK_L:            out[n++] = FORMFEED;               break;
-             case SDLK_M:            out[n++] = CARRIAGERET;            break;
-             case SDLK_N:            out[n++] = SHIFT_OUT;              break;
-             case SDLK_O:            out[n++] = SHIFT_IN;               break;
-             case SDLK_P:            out[n++] = DATA_LINK_ESCAPE;       break;
-             case SDLK_Q:            out[n++] = DEVICE_CONTROL_ONE;     break;
-             case SDLK_R:            out[n++] = DEVICE_CONTROL_TWO;     break;
-             case SDLK_S:            out[n++] = DEVICE_CONTROL_THREE;   break;
-             case SDLK_T:            out[n++] = DEVICE_CONTROL_FOUR;    break;
-             case SDLK_U:            out[n++] = NEGATIVE_ACKNOWLEDGE;   break;
-             case SDLK_V:            out[n++] = SYNCHRONOUS_IDLE;       break;
-             case SDLK_W:            out[n++] = END_TRANSMISSION_BLOCK; break;
-             case SDLK_X:            out[n++] = CANCEL;                 break;
-             case SDLK_Y:            out[n++] = END_OF_MEDIUM;          break;
-             case SDLK_Z:            out[n++] = SUBSTITUTE;             break;
-             case SDLK_LEFTBRACKET:  out[n++] = ESC;                    break;
-             case SDLK_BACKSLASH:    out[n++] = FILE_SEPARATOR;         break;
-             case SDLK_RIGHTBRACKET: out[n++] = GROUP_SEPARATOR;        break;
-             case SDLK_CARET:        out[n++] = RECORD_SEPARATOR;       break;
-             case SDLK_UNDERSCORE:   out[n++] = UNIT_SEPARATOR;         break;
+            case SDLK_SPACE:        out[n++] = NULL_;                  break;
+            case SDLK_AT:           out[n++] = NULL_;                  break;
+            case SDLK_A:            out[n++] = START_OF_HEADING;       break;
+            case SDLK_B:            out[n++] = START_OF_TEXT;          break;
+            case SDLK_C:            out[n++] = END_OF_TEXT;            break;
+            case SDLK_D:            out[n++] = END_OF_TRANSMISSION;    break;
+            case SDLK_E:            out[n++] = ENQUIRY;                break;
+            case SDLK_F:            out[n++] = ACKNOWLEDGE;            break;
+            case SDLK_G:            out[n++] = BELL;                   break;
+            case SDLK_H:            out[n++] = BACKSPACE;              break;
+            case SDLK_I:            out[n++] = TAB;                    break;
+            case SDLK_J:            out[n++] = LINEFEED;               break;
+            case SDLK_K:            out[n++] = VERTTAB;                break;
+            case SDLK_L:            out[n++] = FORMFEED;               break;
+            case SDLK_M:            out[n++] = CARRIAGERET;            break;
+            case SDLK_N:            out[n++] = SHIFT_OUT;              break;
+            case SDLK_O:            out[n++] = SHIFT_IN;               break;
+            case SDLK_P:            out[n++] = DATA_LINK_ESCAPE;       break;
+            case SDLK_Q:            out[n++] = DEVICE_CONTROL_ONE;     break;
+            case SDLK_R:            out[n++] = DEVICE_CONTROL_TWO;     break;
+            case SDLK_S:            out[n++] = DEVICE_CONTROL_THREE;   break;
+            case SDLK_T:            out[n++] = DEVICE_CONTROL_FOUR;    break;
+            case SDLK_U:            out[n++] = NEGATIVE_ACKNOWLEDGE;   break;
+            case SDLK_V:            out[n++] = SYNCHRONOUS_IDLE;       break;
+            case SDLK_W:            out[n++] = END_TRANSMISSION_BLOCK; break;
+            case SDLK_X:            out[n++] = CANCEL;                 break;
+            case SDLK_Y:            out[n++] = END_OF_MEDIUM;          break;
+            case SDLK_Z:            out[n++] = SUBSTITUTE;             break;
+            case SDLK_LEFTBRACKET:  out[n++] = ESC;                    break;
+            case SDLK_BACKSLASH:    out[n++] = FILE_SEPARATOR;         break;
+            case SDLK_RIGHTBRACKET: out[n++] = GROUP_SEPARATOR;        break;
+            case SDLK_CARET:        out[n++] = RECORD_SEPARATOR;       break;
+            case SDLK_UNDERSCORE:   out[n++] = UNIT_SEPARATOR;         break;
         }
     } else if (ev.mod & SDL_KMOD_ALT) {
         switch (k) {
-             case SDLK_A: out[n++] = ESC; out[n++] = 'a'; break;
-             case SDLK_B: out[n++] = ESC; out[n++] = 'b'; break;
-             case SDLK_C: out[n++] = ESC; out[n++] = 'c'; break;
-             case SDLK_D: out[n++] = ESC; out[n++] = 'd'; break;
-             case SDLK_E: out[n++] = ESC; out[n++] = 'e'; break;
-             case SDLK_F: out[n++] = ESC; out[n++] = 'f'; break;
-             case SDLK_G: out[n++] = ESC; out[n++] = 'g'; break;
-             case SDLK_H: out[n++] = ESC; out[n++] = 'h'; break;
-             case SDLK_I: out[n++] = ESC; out[n++] = 'i'; break;
-             case SDLK_J: out[n++] = ESC; out[n++] = 'j'; break;
-             case SDLK_K: out[n++] = ESC; out[n++] = 'k'; break;
-             case SDLK_L: out[n++] = ESC; out[n++] = 'l'; break;
-             case SDLK_M: out[n++] = ESC; out[n++] = 'm'; break;
-             case SDLK_N: out[n++] = ESC; out[n++] = 'n'; break;
-             case SDLK_O: out[n++] = ESC; out[n++] = 'o'; break;
-             case SDLK_P: out[n++] = ESC; out[n++] = 'p'; break;
-             case SDLK_Q: out[n++] = ESC; out[n++] = 'q'; break;
-             case SDLK_R: out[n++] = ESC; out[n++] = 'r'; break;
-             case SDLK_S: out[n++] = ESC; out[n++] = 's'; break;
-             case SDLK_T: out[n++] = ESC; out[n++] = 't'; break;
-             case SDLK_U: out[n++] = ESC; out[n++] = 'u'; break;
-             case SDLK_V: out[n++] = ESC; out[n++] = 'v'; break;
-             case SDLK_W: out[n++] = ESC; out[n++] = 'w'; break;
-             case SDLK_X: out[n++] = ESC; out[n++] = 'x'; break;
-             case SDLK_Y: out[n++] = ESC; out[n++] = 'y'; break;
-             case SDLK_Z: out[n++] = ESC; out[n++] = 'z'; break;
+            case SDLK_0: out[n++] = ESC; out[n++] = '0'; break;
+            case SDLK_1: out[n++] = ESC; out[n++] = '1'; break;
+            case SDLK_2: out[n++] = ESC; out[n++] = '2'; break;
+            case SDLK_3: out[n++] = ESC; out[n++] = '3'; break;
+            case SDLK_4: out[n++] = ESC; out[n++] = '4'; break;
+            case SDLK_5: out[n++] = ESC; out[n++] = '5'; break;
+            case SDLK_6: out[n++] = ESC; out[n++] = '6'; break;
+            case SDLK_7: out[n++] = ESC; out[n++] = '7'; break;
+            case SDLK_8: out[n++] = ESC; out[n++] = '8'; break;
+            case SDLK_9: out[n++] = ESC; out[n++] = '9'; break;
+            case SDLK_A: out[n++] = ESC; out[n++] = 'a'; break;
+            case SDLK_B: out[n++] = ESC; out[n++] = 'b'; break;
+            case SDLK_C: out[n++] = ESC; out[n++] = 'c'; break;
+            case SDLK_D: out[n++] = ESC; out[n++] = 'd'; break;
+            case SDLK_E: out[n++] = ESC; out[n++] = 'e'; break;
+            case SDLK_F: out[n++] = ESC; out[n++] = 'f'; break;
+            case SDLK_G: out[n++] = ESC; out[n++] = 'g'; break;
+            case SDLK_H: out[n++] = ESC; out[n++] = 'h'; break;
+            case SDLK_I: out[n++] = ESC; out[n++] = 'i'; break;
+            case SDLK_J: out[n++] = ESC; out[n++] = 'j'; break;
+            case SDLK_K: out[n++] = ESC; out[n++] = 'k'; break;
+            case SDLK_L: out[n++] = ESC; out[n++] = 'l'; break;
+            case SDLK_M: out[n++] = ESC; out[n++] = 'm'; break;
+            case SDLK_N: out[n++] = ESC; out[n++] = 'n'; break;
+            case SDLK_O: out[n++] = ESC; out[n++] = 'o'; break;
+            case SDLK_P: out[n++] = ESC; out[n++] = 'p'; break;
+            case SDLK_Q: out[n++] = ESC; out[n++] = 'q'; break;
+            case SDLK_R: out[n++] = ESC; out[n++] = 'r'; break;
+            case SDLK_S: out[n++] = ESC; out[n++] = 's'; break;
+            case SDLK_T: out[n++] = ESC; out[n++] = 't'; break;
+            case SDLK_U: out[n++] = ESC; out[n++] = 'u'; break;
+            case SDLK_V: out[n++] = ESC; out[n++] = 'v'; break;
+            case SDLK_W: out[n++] = ESC; out[n++] = 'w'; break;
+            case SDLK_X: out[n++] = ESC; out[n++] = 'x'; break;
+            case SDLK_Y: out[n++] = ESC; out[n++] = 'y'; break;
+            case SDLK_Z: out[n++] = ESC; out[n++] = 'z'; break;
         }
     } else {
         switch (ev.key) {
             // case SDLK_F1:          out = "𒀀"; n = strlen("𒀀"); break;// multibyte char for testing
 
-            case SDLK_BACKSPACE:   out[n++] = BACKSPACE; break;
+            case SDLK_BACKSPACE:   out[n++] = DEL; break;
             case SDLK_TAB:         out[n++] = TAB; break;
             case SDLK_RETURN:      out[n++] = CARRIAGERET; if (m->autonewline) out[n++] = LINEFEED; break;
             case SDLK_UP:          out[n++] = ESC; out[n++] = m->cursor_application ? '[' : 'O'; out[n++] = 'A'; break; 
@@ -1565,9 +1718,11 @@ size_t minal_cursor2absol(Minal* m)
     WhichRegion which = minal_cursor_in_region(m);
     switch (which) {
         case REGION_ABOVE:  return m->above_reg.start + m->cursor.row;
-        case REGION_BELOW: return m->below_reg.start + (m->cursor.row - m->scroll_reg.end);
-        case REGION_SCROLL: return m->row_offset + m->cursor.row;
-        default: printf("Invalid Region '%d'\n", which); return REGION_SCROLL;
+        case REGION_BELOW:  return m->below_reg.start + (m->cursor.row - m->scroll_reg.end);
+        case REGION_SCROLL: return m->row_offset      + m->cursor.row;
+        default: 
+            printf("Invalid Region '%d'\n", which);
+            return m->row_offset + m->cursor.row;;
     }
 }
 
@@ -1739,11 +1894,10 @@ void minal_transmitter(Minal* m, SDL_Event* event)
         char code[10];
         size_t n = minal_keyboard_to_ansi(m, event->key, code);
         if (n == 0) return;
-        #if DEBUG & (DEBUG_TRANSMITTER | DEBUG_ALL)
-        if (isprint(*code)) printf("[TRANSMITTER] code = '%s'\n", code);
-        else                printf("[TRANSMITTER] code = '0x%02X'\n", *code);
-        #endif
-        minal_write_str(m, code);
+
+        debug_transmitter(code);
+        if (n == 1) minal_write_char(m, *code);
+        else        minal_write_str(m, code);
     }
 
     if (event->type == SDL_EVENT_TEXT_INPUT) {
@@ -1809,7 +1963,11 @@ void minal_new_line(Minal* m)
 {
     Line new_line = minal_line_alloc(m);
     size_t idx = m->below_reg.start;
-    vec_insert(&m->lines, new_line, idx);
+    if (idx > m->lines.len) {
+        vec_append(&m->lines, new_line);
+    } else {
+        vec_insert(&m->lines, new_line, idx);
+    }
     m->below_reg.start++;
     m->below_reg.end++;
 }
@@ -1827,7 +1985,7 @@ Cell minal_default_cell(Minal *m)
 {
     Cell c = {
         .style = m->cursor.style,
-        .content = ' ',
+        .content = L' ',
     };
     return c;
 }
@@ -1840,9 +1998,12 @@ Cell minal_default_cell(Minal *m)
  ******************************************************************************/
 void minal_render_cursor(Minal* m)
 {
-    SDL_SetRenderDrawColor(m->rend, m->cursor.style.fg_color.r, m->cursor.style.fg_color.g, m->cursor.style.fg_color.b, m->cursor.style.fg_color.a);
-    SDL_FRect cur = minal_cursor_to_rect(m);
-    SDL_RenderFillRect(m->rend, &cur);
+    debug_cursor(m);
+    if (!m->cursor.hidden) {
+        SDL_SetRenderDrawColor(m->rend, m->cursor.style.fg_color.r, m->cursor.style.fg_color.g, m->cursor.style.fg_color.b, m->cursor.style.fg_color.a);
+        SDL_FRect cur = minal_cursor_to_rect(m);
+        SDL_RenderFillRect(m->rend, &cur);
+    }
 }
 
 void minal_render_text(Minal* m)
@@ -1850,12 +2011,10 @@ void minal_render_text(Minal* m)
     uint8_t tick_secs = SDL_GetTicks() / 1000;
     TTF_SetTextString(m->text, "", 0);
 
-    minal_render_region(m, m->above_reg,  tick_secs);
-    minal_render_region(m, m->scroll_reg, tick_secs);
     minal_render_region(m, m->below_reg, tick_secs);
-
-    m->lastframe_cursor = m->cursor;
-    m->lastframe_offset = m->row_offset;
+    minal_render_region(m, m->scroll_reg, tick_secs);
+    minal_render_region(m, m->above_reg,  tick_secs);
+    debug_region_log(m);
 }
 
 void minal_render_region(Minal* m, Region region, uint8_t ticks)
@@ -1865,16 +2024,15 @@ void minal_render_region(Minal* m, Region region, uint8_t ticks)
     float x = 0;
     float y0;
     if (region.absolute) {
-        if (region.start < m->scroll_reg.start) {
+        if (region.start < m->row_offset + m->scroll_reg.start) {
             y0 = 0;
         }
-        if (region.start > m->scroll_reg.start) {
+        if (region.start > m->row_offset + m->scroll_reg.start) {
             y0 = (m->scroll_reg.end * m->config.cell_height);
         }
     } else {
         y0 = region.start * m->config.cell_height;
     }
-
 
     size_t start;
     size_t end;
@@ -1900,26 +2058,22 @@ void minal_render_region(Minal* m, Region region, uint8_t ticks)
                 .w = m->config.cell_width,
                 .h = m->config.cell_height,
             };
-            if (col != m->cursor.col || row != m->cursor.row) {
+            size_t absrow = minal_cursor2absol(m);
+            if (col != m->cursor.col || row != absrow || m->cursor.hidden) {
                 SDL_SetRenderDrawColor(m->rend, style.bg_color.r, style.bg_color.g, style.bg_color.b, style.bg_color.a);
                 SDL_RenderFillRect(m->rend, &bg);
             }
                 
-            if (line.len == 0) {
-                x += m->config.cell_width;
-                continue;
-            }
-
             uint8_t ch[5];
             int len = utf32_to_utf8(cell.content, ch);
             TTF_SetTextString(m->text, (char*)ch, len);
 
-            SDL_Color fg;
-            if (col == m->cursor.col && row == m->cursor.row) fg = style.bg_color;
-            else                                              fg = style.fg_color;
+            SDL_Color fg = style.fg_color;
+            if (col == m->cursor.col && row == absrow) fg = style.bg_color;
+            else                                       fg = style.fg_color;
 
             if (style.faint) fg.a /= 2;
-
+            
             if      (style.hidden)    fg.a = 0;
             else if (style.blink)     fg.a *= blink;
             else if (style.fastblink) fg.a *= fastblink;
@@ -1935,12 +2089,10 @@ void minal_render_region(Minal* m, Region region, uint8_t ticks)
             TTF_DrawRendererText(m->text, x, y);
             x += m->config.cell_width;
         }
-        TTF_SetTextString(m->text, "\n", 1);
-        TTF_DrawRendererText(m->text, x, y);
         y += m->config.cell_height;
     }
 
-    debug_region(m, y0, y);
+    debug_region_visual(m, y0, y);
 }
 
 float blink_ratio(uint64_t secs, float freq) 
@@ -2014,9 +2166,49 @@ static inline void debug_dump(StringView buf)
 #endif
 }
 
-static inline void debug_region(Minal* m, float y0, float y)
+static inline void debug_transmitter(char* code)
+{
+    #if DEBUG & (DEBUG_TRANSMITTER | DEBUG_ALL)
+    if (isprint(*code)) printf("[TRANSMITTER] code = '%s'\n", code);
+    else                printf("[TRANSMITTER] code = '0x%02X'\n", *code);
+    #endif
+}
+
+
+static inline void debug_cursor(Minal* m)
+{
+    #if DEBUG & (DEBUG_CURSOR | DEBUG_ALL)
+    Cursor c = m->cursor;
+    SDL_FRect r = minal_cursor_to_rect(m);
+    printf("----\n");
+    printf("[CURSOR] POSITION:    { col = %zu, row = %zu }\n", c.col, c.row);
+    printf("[CURSOR] RENDER RECT: { x = %f, y = %f, w = %f, h = %f }\n", r.x, r.y, r.w, r.h);
+    printf("[CURSOR] HIDDEN:      { %d }\n", c.hidden);
+    printf("[CURSOR] COLORS:      { FG = %u, %u, %u, %u, \n", c.style.fg_color.r, c.style.fg_color.g, c.style.fg_color.b , c.style.fg_color.a);
+    printf("                        BG = %u, %u, %u, %u, \n", c.style.bg_color.r, c.style.bg_color.g, c.style.bg_color.b , c.style.bg_color.a);
+    printf("                        UL = %u, %u, %u, %u }\n", c.style.ul_color.r, c.style.ul_color.g, c.style.ul_color.b, c.style.ul_color.a);
+    printf("[CURSOR] STYLE:       { bold   = %d, faint     = %d, italic      = %d, underline = %d,\n", c.style.bold, c.style.faint, c.style.italic, c.style.underline);
+    printf("                        blink  = %d, fastblink = %d, inverse     = %d, \n", c.style.blink, c.style.fastblink, c.style.inverse);
+    printf("                        hidden = %d, crossout  = %d, doubleunder = %d }\n", c.style.hidden ,c.style.crossout, c.style.doubleunder);
+    #endif
+}
+
+
+static inline void debug_region_log(Minal* m)
 {
 #if DEBUG & (DEBUG_REGION | DEBUG_ALL)
+    printf("----\n");
+    printf("OFFSET: { %zu }\n", m->row_offset);
+    printf("ABOVE : { start = %zu, end = %zu }\n", m->above_reg.start, m->above_reg.end);
+    printf("SCROLL: { start = %zu, end = %zu }\n", m->scroll_reg.start, m->scroll_reg.end);
+    printf("BELOW : { start = %zu, end = %zu }\n", m->below_reg.start, m->below_reg.end);
+#endif
+}
+
+static inline void debug_region_visual(Minal* m, float y0, float y)
+{
+#if DEBUG & (DEBUG_REGION | DEBUG_ALL)
+
     SDL_Color c = (SDL_Color) { .r = 20, .g = 20, .b = 200, .a = 200 };
     SDL_SetRenderDrawColor(m->rend, c.r, c.g, c.b, c.a);
     SDL_FRect s = (SDL_FRect) {

@@ -42,8 +42,8 @@
 #define DEBUG_DUMP         (1 << 2)
 #define DEBUG_TRANSMITTER  (1 << 3)
 #define DEBUG_ESCAPES      (1 << 4)
-// #define DEBUG (DEBUG_REGION | DEBUG_ESCAPES)
-#define DEBUG (DEBUG_ESCAPES)
+#define DEBUG_CURSOR       (1 << 5)
+#define DEBUG (DEBUG_DUMP | DEBUG_ESCAPES)
 
 #define FONT_FILE              "resources/font.ttf"
 #define FALLBACK_1             "/usr/share/fonts/TTF/Hack-Bold.ttf"
@@ -53,9 +53,11 @@
 
 #define DEFAULT_FONT_SIZE   18.0f
 #define DEFAULT_DISPLAY_DPI 96
-#define DEFAULT_N_COLS      90
+// #define DEFAULT_N_COLS      90
 // #define DEFAULT_N_COLS      120
-#define DEFAULT_N_ROWS      30
+// #define DEFAULT_N_ROWS      30
+#define DEFAULT_N_COLS 80
+#define DEFAULT_N_ROWS 24
 
 #define FPS    144
 
@@ -92,6 +94,7 @@ typedef struct {
 } Style;
 
 typedef struct {
+    bool   hidden: 1;
     Style  style;
     size_t row;
     size_t col;
@@ -139,9 +142,6 @@ typedef struct {
     Region          above_reg;
     Region          below_reg;
 
-    Cursor          lastframe_cursor;
-    size_t          lastframe_offset;
-
     SDL_Window*     window;
     SDL_Renderer*   rend;
 
@@ -177,7 +177,11 @@ void        minal_parse_ansi_osc(Minal* m, StringView* bytes);
 void        minal_parse_ansi_csi(Minal* m, StringView* bytes);
 void        minal_erase_in_line(Minal* m, size_t opt);
 void        minal_erase_in_display(Minal* m, size_t opt);
+void        minal_insert_lines(Minal* m, size_t n);
+void        minal_delete_lines(Minal* m, size_t n);
+void        minal_insert_chars(Minal* m, size_t n);
 void        minal_delete_chars(Minal* m, size_t n);
+void        minal_erase_chars(Minal* m, size_t n);
 void        minal_linefeed(Minal* m);
 void        minal_carriageret(Minal* m);
 void        minal_pageup(Minal* m, size_t opt);
@@ -225,7 +229,10 @@ static inline void debug_escape(char* escape);
 static inline void debug_sequence_start(StringView start);
 static inline void debug_sequence_end(StringView end);
 static inline void debug_dump(StringView buf);
-static inline void debug_region(Minal* m, float y0, float y);
+static inline void debug_transmitter(char* code);
+static inline void debug_cursor(Minal* m);
+static inline void debug_region_log(Minal* m);
+static inline void debug_region_visual(Minal* m, float y0, float y);
 void fonts_with_glyph(Minal m, uint32_t glyph);
 
 // colors and styles
